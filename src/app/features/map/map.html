@@ -1,0 +1,25 @@
+<section class="map-view" [attr.data-lang]="lang()">
+  <div class="map-view__canvas" #mapEl></div>
+
+  <aside class="map-view__legend" aria-label="Legend">
+    <h2>{{ i18n.t('map.legendTitle') }}</h2>
+    <p class="map-view__count">
+      {{ i18n.t('map.eventsCount', { count: all().length }) }}
+    </p>
+    <ul>
+      <li><span class="legend-dot legend-dot--regional"></span> {{ i18n.t('map.legendRegional') }}</li>
+      <li><span class="legend-dot legend-dot--finals"></span> {{ i18n.t('map.legendFinals') }}</li>
+      <li><span class="legend-dot legend-dot--registered"></span> {{ i18n.t('map.legendRegistered') }}</li>
+    </ul>
+  </aside>
+
+  @if (selected(); as event) {
+    <div class="map-view__panel">
+      <app-event-card
+        [event]="event"
+        (registerToggled)="onRegisterToggle($event)"
+        (closed)="close()"
+      />
+    </div>
+  }
+</section>

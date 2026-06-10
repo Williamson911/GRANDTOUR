@@ -1,0 +1,197 @@
+.event-list-item {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 14px 18px 14px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  transition: transform 0.12s ease, border-color 0.15s ease;
+
+  &--finals {
+    border-left-color: var(--color-primary);
+  }
+
+  &--registered {
+    box-shadow: 0 0 0 1px var(--color-primary-soft);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.event-list-item__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  border: 1px solid var(--color-border);
+}
+
+.event-list-item__type {
+  font-family: var(--font-display);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  margin-bottom: 4px;
+
+  .event-list-item--finals & {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.event-list-item__day {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.event-list-item__month {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.event-list-item__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-list-item__name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.event-list-item__location {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+
+  strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.event-list-item__sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.event-list-item__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.event-list-item__link {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+}
+
+.event-list-item__cta {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--color-border);
+  }
+
+  &--on {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 85%, black);
+    }
+  }
+}
+
+.event-list-item__detail {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+}
+
+@media (max-width: 640px) {
+  .event-list-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .event-list-item__date {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .event-list-item__actions {
+    flex-wrap: wrap;
+  }
+
+  .event-list-item__cta {
+    flex: 1;
+  }
+}

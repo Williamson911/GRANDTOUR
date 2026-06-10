@@ -1,0 +1,155 @@
+<section class="profile" [attr.data-lang]="lang()">
+  @if (user(); as u) {
+    <div class="profile__card">
+      <header class="profile__head">
+        <h1>{{ i18n.t('profile.title') }}</h1>
+        <p>{{ i18n.t('profile.subtitle') }}</p>
+      </header>
+
+      <form
+        class="profile__form"
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        autocomplete="on"
+        novalidate
+      >
+        <h2 class="profile__section-title">{{ i18n.t('profile.section.account') }}</h2>
+
+        <label class="profile__field">
+          <span>{{ i18n.t('profile.username') }}</span>
+          <input
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            required
+          />
+          @if (form.get('username'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.usernameRequired') }}
+              </small>
+            } @else if (ctrl.touched && (ctrl.errors?.['minlength'] || ctrl.errors?.['maxlength'])) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.usernameLength') }}
+              </small>
+            } @else if (ctrl.touched && ctrl.errors?.['pattern']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.usernamePattern') }}
+              </small>
+            } @else if (ctrl.touched && ctrl.errors?.['taken']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.usernameTaken') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="profile__field">
+          <span>{{ i18n.t('profile.email') }}</span>
+          <input
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            required
+          />
+          @if (form.get('email'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.emailRequired') }}
+              </small>
+            } @else if (ctrl.touched && ctrl.errors?.['email']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.emailInvalid') }}
+              </small>
+            } @else if (ctrl.touched && ctrl.errors?.['taken']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.emailTaken') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="profile__field">
+          <span class="profile__label-row">
+            {{ i18n.t('profile.bandai') }}
+            <em class="profile__optional">{{ i18n.t('profile.bandaiOptional') }}</em>
+          </span>
+          <input
+            type="text"
+            formControlName="bandaiTcgId"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="0000070693"
+          />
+          @if (form.get('bandaiTcgId'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['bandaiInvalid']) {
+              <small class="profile__field-error">
+                {{ i18n.t('profile.errors.bandaiInvalid') }}
+              </small>
+            }
+          }
+        </label>
+
+        @if (formError()) {
+          <p class="profile__error" role="alert">{{ formError() }}</p>
+        }
+        @if (success()) {
+          <p class="profile__success" role="status">
+            {{ i18n.t('profile.successUpdated') }}
+          </p>
+        }
+
+        <button type="submit" class="profile__save" [disabled]="busy()">
+          @if (busy()) {
+            {{ i18n.t('profile.busy') }}
+          } @else {
+            {{ i18n.t('profile.save') }}
+          }
+        </button>
+      </form>
+
+      <section class="profile__meta">
+        <h2 class="profile__section-title">{{ i18n.t('profile.section.meta') }}</h2>
+        <dl>
+          <div>
+            <dt>{{ i18n.t('profile.createdAt') }}</dt>
+            <dd>{{ u.createdAt | date: 'longDate' : undefined : dateLocale() }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('profile.recoveryCodeUpdatedAt') }}</dt>
+            <dd>
+              {{ u.recoveryCodeUpdatedAt | date: 'longDate' : undefined : dateLocale() }}
+            </dd>
+          </div>
+        </dl>
+        <a class="profile__link" routerLink="/forgot-password">
+          {{ i18n.t('profile.changePassword') }} →
+        </a>
+      </section>
+
+      <section class="profile__danger">
+        <h2 class="profile__section-title profile__section-title--danger">
+          {{ i18n.t('profile.section.danger') }}
+        </h2>
+        <div class="profile__danger-actions">
+          <button
+            type="button"
+            class="profile__logout"
+            (click)="logout()"
+            [disabled]="busy()"
+          >
+            {{ i18n.t('profile.logout') }}
+          </button>
+          <button
+            type="button"
+            class="profile__delete"
+            (click)="deleteAccount()"
+            [disabled]="busy()"
+          >
+            {{ i18n.t('profile.delete') }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

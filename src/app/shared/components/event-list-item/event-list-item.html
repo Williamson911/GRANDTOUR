@@ -1,0 +1,60 @@
+<article
+  class="event-list-item"
+  [class]="variantClass()"
+  [class.event-list-item--registered]="event().registered"
+>
+  <div class="event-list-item__date">
+    <span class="event-list-item__type">{{ event().type }}</span>
+    <span class="event-list-item__day">
+      {{ event().date | date: 'd' : undefined : dateLocale() }}
+    </span>
+    <span class="event-list-item__month">
+      {{ event().date | date: 'MMM y' : undefined : dateLocale() }}
+    </span>
+  </div>
+
+  <div class="event-list-item__body">
+    <h3 class="event-list-item__name">{{ event().name }}</h3>
+    <p class="event-list-item__location">
+      <strong>{{ event().location.city }}</strong>,
+      {{ event().location.country }}
+      <span class="event-list-item__sep">·</span>
+      {{ event().location.venue }}
+    </p>
+  </div>
+
+  <div class="event-list-item__actions">
+    @if (event().registerLink; as link) {
+      <a
+        class="event-list-item__link"
+        [href]="link"
+        target="_blank"
+        rel="noopener noreferrer"
+        [attr.aria-label]="i18n.t('event.officialLink')"
+      >
+        ↗
+      </a>
+    }
+    <button
+      type="button"
+      class="event-list-item__cta"
+      [class.event-list-item__cta--on]="event().registered"
+      (click)="toggle()"
+    >
+      @if (event().registered) {
+        {{ i18n.t('event.registered') }}
+      } @else {
+        {{ i18n.t('event.register') }}
+      }
+    </button>
+    @if (showDetail()) {
+      <button
+        type="button"
+        class="event-list-item__detail"
+        (click)="openDetail()"
+      >
+        {{ i18n.t('detail.detailButton') }} →
+      </button>
+    }
+  </div>
+</article>

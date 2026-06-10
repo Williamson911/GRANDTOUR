@@ -1,0 +1,72 @@
+<section class="auth" [attr.data-lang]="lang()">
+  <form
+    class="auth__card"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    autocomplete="on"
+    novalidate
+  >
+    <h1 class="auth__title">{{ i18n.t('login.title') }}</h1>
+    <p class="auth__subtitle">{{ i18n.t('login.subtitle') }}</p>
+
+    <label class="auth__field">
+      <span>{{ i18n.t('login.usernameOrEmail') }}</span>
+      <input
+        type="text"
+        formControlName="usernameOrEmail"
+        autocomplete="username"
+        required
+      />
+      @if (form.get('usernameOrEmail'); as ctrl) {
+        @if (ctrl.touched && ctrl.errors?.['required']) {
+          <small class="auth__field-error">
+            {{ i18n.t('login.errors.identifierRequired') }}
+          </small>
+        }
+      }
+    </label>
+
+    <label class="auth__field">
+      <span>{{ i18n.t('login.password') }}</span>
+      <input
+        type="password"
+        formControlName="password"
+        autocomplete="current-password"
+        required
+      />
+      @if (form.get('password'); as ctrl) {
+        @if (ctrl.touched && ctrl.errors?.['required']) {
+          <small class="auth__field-error">
+            {{ i18n.t('login.errors.passwordRequired') }}
+          </small>
+        }
+      }
+    </label>
+
+    <label class="auth__remember">
+      <input type="checkbox" formControlName="remember" />
+      <span>{{ i18n.t('login.remember') }}</span>
+    </label>
+
+    <p class="auth__forgot">
+      <a routerLink="/forgot-password">{{ i18n.t('login.forgotLink') }}</a>
+    </p>
+
+    @if (error()) {
+      <p class="auth__error" role="alert">{{ error() }}</p>
+    }
+
+    <button type="submit" class="auth__submit" [disabled]="busy()">
+      @if (busy()) {
+        {{ i18n.t('login.busy') }}
+      } @else {
+        {{ i18n.t('login.submit') }}
+      }
+    </button>
+
+    <p class="auth__switch">
+      {{ i18n.t('login.switch') }}
+      <a routerLink="/register">{{ i18n.t('login.switchLink') }}</a>
+    </p>
+  </form>
+</section>

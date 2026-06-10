@@ -1,1 +1,64 @@
-/* You can add global styles to this file, and also import other style files */
+@font-face {
+  font-family: 'Heading Now';
+  src: url('/font/HeadingNowTrial-57Extrabold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-bg: #110E11;
+  --color-surface: #1A171B;
+  --color-surface-2: #221E23;
+  --color-border: #2E2A30;
+  --color-primary: #C62338;
+  --color-primary-soft: rgba(198, 35, 56, 0.18);
+  --color-accent: #CFA30F;
+  --color-accent-soft: rgba(207, 163, 15, 0.18);
+  --color-text: #FFFFFC;
+  --color-text-muted: #B8B2B6;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --font-display: 'Heading Now', 'Inter Tight', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+.placeholder {
+  padding: 48px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--color-text-muted);
+
+  h1 {
+    font-family: var(--font-display);
+    color: var(--color-text);
+    font-size: 28px;
+    margin: 0 0 12px;
+  }
+
+  strong {
+    color: var(--color-accent);
+  }
+}

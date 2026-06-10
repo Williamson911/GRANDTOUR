@@ -1,0 +1,63 @@
+[
+  {
+    "id": "w1-pec-occitania-rungis-2026-06",
+    "name": "PEC Occitania — Rungis (Wave 1)",
+    "type": "Regional",
+    "date": "2026-06-14",
+    "location": {
+      "city": "Rungis",
+      "country": "France",
+      "venue": "Espace Jean Monnet, Parc Icade — 47 Rue des Solets, 94150",
+      "lat": 48.7569,
+      "lng": 2.3633
+    },
+    "registerLink" : "https://pecoccitania.fr/",
+    "registered": false
+  },
+  {
+    "id": "w1-gametrade-distribuzione-parma-2026-06",
+    "name": "Gametrade Distribuzione — Parma (Wave 1)",
+    "type": "Regional",
+    "date": "2026-06-28",
+    "location": {
+      "city": "Parma",
+      "country": "Italy",
+      "venue": "Hotel Parma & Congressi — Via Emilia Ovest",
+      "lat": 44.81899341239103,
+      "lng": 10.248594608410356
+    },
+    "registerLink": "https://www.dbs-cardgame.it/tornei/485/DBS_Card_Game_Master_Regional_2026_Season_1_-_Parma",
+    "registered": false
+  },
+  {
+    "id": "w1-victory-road-sabadell-2026-06",
+    "name": "Victory Road — Sabadell (Wave 1)",
+    "type": "Regional",
+    "date": "2026-06-28",
+    "location": {
+      "city": "Sabadell",
+      "country": "Spain",
+      "venue": "Fira Sabadell —  Pl. de la Sardana",
+
+      "lat": 41.54548977725353,
+      "lng": 2.1176446624178973
+    },
+    "registerLink" : "https://my.weezevent.com/db-masters-barcelona-2026",
+    "registered": false
+  },
+  {
+    "id": "w2-victory-road-madrid-2026-08",
+    "name": "Victory Road — Madrid (Wave 2)",
+    "type": "Regional",
+    "date": "2026-08-16",
+    "location": {
+      "city": "Madrid",
+      "country": "Spain",
+      "venue": "La Nave — Calle Cifuentes",
+      "lat": 40.3801,
+      "lng": -3.6826
+    },
+    "registerLink" : "https://my.weezevent.com/db-masters-madrid-2026",
+    "registered": false
+  }
+]

@@ -1,0 +1,54 @@
+<article class="event-card" [class]="variantClass()">
+  <header class="event-card__header">
+    <span class="event-card__type">{{ event().type }}</span>
+    <button
+      type="button"
+      class="event-card__close"
+      (click)="close()"
+      [attr.aria-label]="i18n.t('event.close')"
+    >
+      ×
+    </button>
+  </header>
+
+  <h2 class="event-card__title">{{ event().name }}</h2>
+
+  <dl class="event-card__meta">
+    <div>
+      <dt>{{ i18n.t('event.date') }}</dt>
+      <dd>{{ event().date | date: 'EEEE d MMMM y' : undefined : dateLocale() }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('event.city') }}</dt>
+      <dd>{{ event().location.city }}, {{ event().location.country }}</dd>
+    </div>
+    <div>
+      <dt>{{ i18n.t('event.venue') }}</dt>
+      <dd>{{ event().location.venue }}</dd>
+    </div>
+  </dl>
+
+  @if (event().registerLink; as link) {
+    <a
+      class="event-card__link"
+      [href]="link"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {{ i18n.t('event.officialLink') }}
+    </a>
+  }
+
+  <button
+    type="button"
+    class="event-card__cta"
+    [class.event-card__cta--on]="event().registered"
+    (click)="toggle()"
+  >
+    @if (event().registered) {
+      {{ i18n.t('event.registered') }}
+    } @else {
+      {{ i18n.t('event.register') }}
+    }
+  </button>
+</article>

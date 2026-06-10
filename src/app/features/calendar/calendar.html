@@ -1,0 +1,111 @@
+<section class="calendar" [attr.data-lang]="lang()">
+  <header class="calendar__head">
+    <h1>{{ i18n.t('calendar.title') }}</h1>
+    <p>{{ i18n.t('calendar.subtitle') }}</p>
+  </header>
+
+  <div class="calendar__search">
+    <label class="filter-group__label" for="calendar-search">
+      {{ i18n.t('calendar.search.label') }}
+    </label>
+    <div class="calendar__search-wrap">
+      <input
+        id="calendar-search"
+        type="text"
+        class="calendar__search-input"
+        [placeholder]="i18n.t('calendar.search.placeholder')"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          class="calendar__search-clear"
+          (click)="clearSearch()"
+          [attr.aria-label]="i18n.t('calendar.search.clear')"
+        >
+          ×
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="calendar__filters">
+    <div class="filter-group">
+      <span class="filter-group__label">
+        {{ i18n.t('calendar.filter.type.label') }}
+      </span>
+      <div class="pill-group">
+        @for (option of typeOptions; track option) {
+          <button
+            type="button"
+            class="pill"
+            [class.pill--active]="typeFilter() === option"
+            (click)="setType(option)"
+          >
+            {{ typeLabel(option) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-group__label">
+        {{ i18n.t('calendar.filter.period.label') }}
+      </span>
+      <div class="pill-group">
+        @for (option of periodOptions; track option) {
+          <button
+            type="button"
+            class="pill"
+            [class.pill--active]="periodFilter() === option"
+            (click)="setPeriod(option)"
+          >
+            {{ periodLabel(option) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-group__label" for="country-filter">
+        {{ i18n.t('calendar.filter.country.label') }}
+      </label>
+      <select
+        id="country-filter"
+        class="select"
+        [value]="countryFilter()"
+        (change)="onCountryChange($any($event.target).value)"
+      >
+        <option value="all">{{ i18n.t('calendar.filter.country.all') }}</option>
+        @for (country of countries(); track country) {
+          <option [value]="country">{{ country }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="button" class="calendar__reset" (click)="reset()">
+      {{ i18n.t('calendar.filter.reset') }}
+    </button>
+  </div>
+
+  <p class="calendar__count">
+    {{ i18n.t(countLabelKey(), { count: filtered().length }) }}
+  </p>
+
+  @if (filtered().length === 0) {
+    <p class="calendar__empty">{{ i18n.t('calendar.empty') }}</p>
+  } @else {
+    <ul class="calendar__list">
+      @for (event of filtered(); track event.id) {
+        <li>
+          <app-event-list-item
+            [event]="event"
+            (registerToggled)="onRegisterToggle($event)"
+            (detailRequested)="openDetail($event)"
+          />
+        </li>
+      }
+    </ul>
+  }
+</section>

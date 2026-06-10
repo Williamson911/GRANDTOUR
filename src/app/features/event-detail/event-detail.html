@@ -1,0 +1,250 @@
+<section class="detail" [attr.data-lang]="lang()">
+  <a class="detail__back" routerLink="/season">{{ i18n.t('detail.back') }}</a>
+
+  @if (event(); as ev) {
+    <header class="detail__head">
+      <span class="detail__type detail__type--{{ ev.type.toLowerCase() }}">{{ ev.type }}</span>
+      <h1 class="detail__name">{{ ev.name }}</h1>
+      <p class="detail__meta">
+        <strong>{{ ev.location.city }}</strong>, {{ ev.location.country }}
+        <span class="detail__dot">·</span>
+        {{ ev.date | date: 'EEEE d MMMM y' : undefined : dateLocale() }}
+      </p>
+      <p class="detail__venue">{{ ev.location.venue }}</p>
+    </header>
+
+    <section class="card summary">
+      <h2 class="card__title">{{ i18n.t('detail.section.summary') }}</h2>
+      <div class="summary__grid">
+        <div class="summary__cell">
+          <span class="summary__label">{{ i18n.t('detail.summary.spent') }}</span>
+          <span class="summary__value summary__value--spent">
+            {{ totalSpent() | currency: 'EUR' : 'symbol' : '1.0-2' : dateLocale() }}
+          </span>
+        </div>
+        <div class="summary__cell">
+          <span class="summary__label">{{ i18n.t('detail.summary.prizes') }}</span>
+          <span class="summary__value summary__value--prizes">
+            {{ prizes() | currency: 'EUR' : 'symbol' : '1.0-2' : dateLocale() }}
+          </span>
+        </div>
+        <div class="summary__cell">
+          <span class="summary__label">{{ i18n.t('detail.summary.net') }}</span>
+          <span
+            class="summary__value summary__value--net"
+            [class.summary__value--positive]="net() > 0"
+            [class.summary__value--negative]="net() < 0"
+          >
+            {{ net() | currency: 'EUR' : 'symbol' : '1.0-2' : dateLocale() }}
+          </span>
+        </div>
+        @if (result(); as r) {
+          <div class="summary__cell">
+            <span class="summary__label">{{ i18n.t('detail.result.placement') }}</span>
+            <span class="summary__value">
+              {{ r.placement }} / {{ r.totalPlayers }}
+            </span>
+          </div>
+          <div class="summary__cell">
+            <span class="summary__label">{{ i18n.t('detail.matches.result') }}</span>
+            <span class="summary__value">{{ recordLabel() }}</span>
+          </div>
+        }
+      </div>
+      @if (!result()) {
+        <p class="summary__hint">{{ i18n.t('detail.summary.noResult') }}</p>
+      }
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">{{ i18n.t('detail.section.result') }}</h2>
+      <form
+        class="form"
+        [formGroup]="resultForm"
+        (ngSubmit)="saveResult()"
+        novalidate
+      >
+        <div class="form__grid">
+          <label class="field">
+            <span>{{ i18n.t('detail.result.placement') }}</span>
+            <input type="number" formControlName="placement" min="1" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t('detail.result.totalPlayers') }}</span>
+            <input type="number" formControlName="totalPlayers" min="1" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t('detail.result.deckName') }}</span>
+            <input type="text" formControlName="deckName" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t('detail.result.leaderPlayed') }}</span>
+            <input type="text" formControlName="leaderPlayed" />
+          </label>
+          <label class="field">
+            <span>{{ i18n.t('detail.result.prizes') }}</span>
+            <input
+              type="number"
+              formControlName="prizes"
+              min="0"
+              step="0.01"
+            />
+          </label>
+          <label class="field field--full">
+            <span>{{ i18n.t('detail.result.notes') }}</span>
+            <textarea formControlName="notes" rows="2"></textarea>
+          </label>
+        </div>
+
+        @if (resultSaved()) {
+          <p class="form__success" role="status">{{ i18n.t('detail.result.saved') }}</p>
+        }
+
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary">
+            {{ i18n.t('detail.result.save') }}
+          </button>
+          @if (result()) {
+            <button
+              type="button"
+              class="btn btn--ghost-danger"
+              (click)="deleteResult()"
+            >
+              {{ i18n.t('detail.result.delete') }}
+            </button>
+          }
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">
+        {{ i18n.t('detail.section.matches') }}
+        @if (result()) {
+          <span class="card__count">{{ recordLabel() }}</span>
+        }
+      </h2>
+
+      @if (result()) {
+        @if (result()!.matches.length === 0) {
+          <p class="empty">{{ i18n.t('detail.matches.empty') }}</p>
+        } @else {
+          <ul class="match-list">
+            @for (match of result()!.matches; track match.round) {
+              <li class="match" [class]="'match--' + match.result.toLowerCase()">
+                <span class="match__round">R{{ match.round }}</span>
+                <span class="match__leader">{{ match.opponentLeader }}</span>
+                @if (match.opponentName) {
+                  <span class="match__name">{{ match.opponentName }}</span>
+                }
+                <span class="match__result">{{ matchResultLabel(match.result) }}</span>
+                <button
+                  type="button"
+                  class="match__delete"
+                  (click)="deleteMatch(match.round)"
+                  [attr.aria-label]="i18n.t('detail.matches.delete')"
+                >
+                  ×
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <form class="form match-form" [formGroup]="matchForm" (ngSubmit)="addMatch()" novalidate>
+          <div class="form__grid form__grid--compact">
+            <label class="field">
+              <span>{{ i18n.t('detail.matches.opponentLeader') }}</span>
+              <input type="text" formControlName="opponentLeader" />
+            </label>
+            <label class="field">
+              <span>{{ i18n.t('detail.matches.opponentName') }}</span>
+              <input type="text" formControlName="opponentName" />
+            </label>
+            <label class="field">
+              <span>{{ i18n.t('detail.matches.result') }}</span>
+              <select formControlName="result">
+                @for (r of matchResults; track r) {
+                  <option [value]="r">{{ matchResultLabel(r) }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="form__actions">
+            <button type="submit" class="btn btn--accent">
+              {{ i18n.t('detail.matches.cta') }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <p class="empty">{{ i18n.t('detail.summary.noResult') }}</p>
+      }
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">
+        {{ i18n.t('detail.section.expenses') }}
+        <span class="card__count">
+          {{ totalSpent() | currency: 'EUR' : 'symbol' : '1.0-2' : dateLocale() }}
+        </span>
+      </h2>
+
+      @if (expenses().length === 0) {
+        <p class="empty">{{ i18n.t('detail.expenses.empty') }}</p>
+      } @else {
+        <ul class="expense-list">
+          @for (expense of expenses(); track expense.id) {
+            <li class="expense expense--{{ expense.category.toLowerCase() }}">
+              <span class="expense__cat">{{ categoryLabel(expense.category) }}</span>
+              <span class="expense__notes">{{ expense.notes }}</span>
+              <span class="expense__amount">
+                {{ expense.amount | number: '1.2-2' }} €
+              </span>
+              <button
+                type="button"
+                class="expense__delete"
+                (click)="deleteExpense(expense.id)"
+                [attr.aria-label]="i18n.t('detail.expenses.delete')"
+              >
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="form" [formGroup]="expenseForm" (ngSubmit)="addExpense()" novalidate>
+        <div class="form__grid form__grid--compact">
+          <label class="field">
+            <span>{{ i18n.t('detail.expenses.category') }}</span>
+            <select formControlName="category">
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ categoryLabel(cat) }}</option>
+              }
+            </select>
+          </label>
+          <label class="field">
+            <span>{{ i18n.t('detail.expenses.amount') }}</span>
+            <input
+              type="number"
+              formControlName="amount"
+              min="0"
+              step="0.01"
+            />
+          </label>
+          <label class="field field--wide">
+            <span>{{ i18n.t('detail.expenses.notes') }}</span>
+            <input type="text" formControlName="notes" />
+          </label>
+        </div>
+        <div class="form__actions">
+          <button type="submit" class="btn btn--accent">
+            {{ i18n.t('detail.expenses.cta') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  } @else {
+    <p class="empty">{{ i18n.t('detail.notFound') }}</p>
+  }
+</section>

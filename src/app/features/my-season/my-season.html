@@ -1,0 +1,50 @@
+<section class="season" [attr.data-lang]="lang()">
+  <header class="season__head">
+    <h1>{{ i18n.t('season.title') }}</h1>
+    <p>{{ i18n.t('season.subtitle') }}</p>
+  </header>
+
+  <section class="season__section">
+    <header class="season__section-head">
+      <h2>{{ i18n.t('season.upcoming.title') }}</h2>
+      <span class="season__count">{{ upcoming().length }}</span>
+    </header>
+    @if (upcoming().length === 0) {
+      <p class="season__empty">{{ i18n.t('season.empty.upcoming') }}</p>
+    } @else {
+      <ul class="season__list">
+        @for (event of upcoming(); track event.id) {
+          <li>
+            <app-event-list-item
+              [event]="event"
+              (registerToggled)="onRegisterToggle($event)"
+              (detailRequested)="openDetail($event)"
+            />
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="season__section">
+    <header class="season__section-head">
+      <h2>{{ i18n.t('season.past.title') }}</h2>
+      <span class="season__count">{{ past().length }}</span>
+    </header>
+    @if (past().length === 0) {
+      <p class="season__empty">{{ i18n.t('season.empty.past') }}</p>
+    } @else {
+      <ul class="season__list">
+        @for (event of past(); track event.id) {
+          <li>
+            <app-event-list-item
+              [event]="event"
+              (registerToggled)="onRegisterToggle($event)"
+              (detailRequested)="openDetail($event)"
+            />
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>
