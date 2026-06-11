@@ -74,6 +74,44 @@
   }
 }
 
+@media (max-width: 720px) {
+  .map-view {
+    &__legend {
+      top: 12px;
+      right: 12px;
+      left: auto;
+      padding: 10px 12px 8px;
+      min-width: 0;
+
+      h2 {
+        font-size: 12px;
+      }
+
+      ul {
+        gap: 6px;
+        font-size: 11px;
+        margin-top: 6px;
+      }
+    }
+
+    &__panel {
+      top: 76px;
+      bottom: auto;
+      left: 12px;
+      right: 12px;
+      width: auto;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+  }
+
+  /* Leaflet zoom controls sit top-left at z-index 1000; keep them visible
+     but push the legend to top-right so the two don't collide. */
+  .leaflet-top.leaflet-left {
+    z-index: 500;
+  }
+}
+
 .legend-dot {
   width: 12px;
   height: 12px;

@@ -258,3 +258,29 @@
     color: var(--color-text);
   }
 }
+
+@media (max-width: 640px) {
+  .profile {
+    padding: 24px 14px 48px;
+  }
+
+  .profile__card {
+    padding: 22px 18px;
+    gap: 22px;
+    box-shadow: 6px 6px 0 0 var(--color-accent);
+  }
+
+  .profile__head h1 {
+    font-size: 22px;
+  }
+
+  .profile__danger-actions {
+    flex-direction: column;
+  }
+
+  .profile__logout,
+  .profile__delete {
+    min-width: 0;
+    width: 100%;
+  }
+}

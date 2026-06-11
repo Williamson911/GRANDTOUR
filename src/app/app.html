@@ -1,7 +1,7 @@
 @if (online() === false) {
   <app-server-down />
 } @else if (online() === true) {
-<div class="shell">
+<div class="shell" [class.shell--menu-open]="menuOpen()">
   <header class="topbar">
     <a class="brand" routerLink="/map">
       <img
@@ -9,9 +9,26 @@
         src="images/grand_tour_logo.svg"
         alt="Grand Tour"
       />
-      <span class="brand__sub">{{ i18n.t('header.subtitle') }}</span>
+      <span class="brand__sub brand__sub--long">{{ i18n.t('header.subtitle') }}</span>
+      <span class="brand__sub brand__sub--short">{{ i18n.t('header.subtitleShort') }}</span>
     </a>
-    <nav class="nav" aria-label="Navigation">
+
+    @if (session()) {
+      <button
+        type="button"
+        class="topbar__burger"
+        [class.topbar__burger--open]="menuOpen()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="Menu"
+        (click)="toggleMenu()"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    }
+
+    <nav class="nav" [class.nav--open]="menuOpen()" aria-label="Navigation">
       @if (session(); as s) {
         @for (item of nav; track item.path) {
           <a

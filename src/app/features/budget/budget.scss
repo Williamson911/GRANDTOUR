@@ -268,3 +268,28 @@
     font-weight: 600;
   }
 }
+
+@media (max-width: 640px) {
+  .budget {
+    padding: 20px 14px 48px;
+    gap: 20px;
+  }
+
+  .budget__head h1 {
+    font-size: 22px;
+  }
+
+  .budget__stat {
+    padding: 14px 16px;
+  }
+
+  .budget__stat-value {
+    font-size: 22px;
+  }
+
+  .budget__table th,
+  .budget__table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}

@@ -1,5 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 import { AuthService } from './core/services/auth';
 import { DataAvailabilityService } from './core/services/data-availability';
@@ -21,6 +28,7 @@ export class App {
   protected readonly session = this.auth.session;
   protected readonly lang = this.i18n.lang;
   protected readonly online = this.availability.online;
+  protected readonly menuOpen = signal(false);
 
   protected readonly nav = [
     { path: '/map', labelKey: 'nav.map' },
@@ -30,11 +38,22 @@ export class App {
     { path: '/dashboard', labelKey: 'nav.dashboard' },
   ];
 
+  constructor() {
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => this.menuOpen.set(false));
+  }
+
+  protected toggleMenu(): void {
+    this.menuOpen.update((v) => !v);
+  }
+
   protected setLang(lang: Lang): void {
     this.i18n.setLang(lang);
   }
 
   protected logout(): void {
+    this.menuOpen.set(false);
     this.auth.logout();
     this.router.navigate(['/login']);
   }

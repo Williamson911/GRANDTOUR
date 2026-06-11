@@ -7,6 +7,7 @@ const LANG_KEY = 'grandtour.lang.v1';
 const FR: Record<string, string> = {
   // Topbar / nav
   'header.subtitle': 'DRAGON BALL SUPER CARD GAME MASTERS EU Circuit',
+  'header.subtitleShort': 'DBSCG EU Circuit',
   'nav.map': 'Carte',
   'nav.calendar': 'Calendrier',
   'nav.season': 'Ma saison',
@@ -281,6 +282,7 @@ const FR: Record<string, string> = {
 const EN: Record<string, string> = {
   // Topbar / nav
   'header.subtitle': 'DRAGON BALL SUPER CARD GAME MASTERS EU Circuit',
+  'header.subtitleShort': 'DBSCG EU Circuit',
   'nav.map': 'Map',
   'nav.calendar': 'Calendar',
   'nav.season': 'My season',

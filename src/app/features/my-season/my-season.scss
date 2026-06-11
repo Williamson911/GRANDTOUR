@@ -83,3 +83,14 @@
   flex-direction: column;
   gap: 12px;
 }
+
+@media (max-width: 640px) {
+  .season {
+    padding: 20px 14px 48px;
+    gap: 22px;
+  }
+
+  .season__head h1 {
+    font-size: 22px;
+  }
+}

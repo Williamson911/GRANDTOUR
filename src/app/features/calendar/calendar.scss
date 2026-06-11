@@ -200,3 +200,32 @@
   flex-direction: column;
   gap: 12px;
 }
+
+@media (max-width: 640px) {
+  .calendar {
+    padding: 20px 14px 48px;
+  }
+
+  .calendar__head h1 {
+    font-size: 22px;
+  }
+
+  .calendar__filters {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .calendar__reset {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}

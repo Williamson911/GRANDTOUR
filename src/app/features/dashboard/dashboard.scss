@@ -309,3 +309,42 @@
     }
   }
 }
+
+@media (max-width: 640px) {
+  .dashboard {
+    padding: 20px 14px 48px;
+    gap: 18px;
+  }
+
+  .dashboard__head h1 {
+    font-size: 22px;
+  }
+
+  .bento {
+    gap: 10px;
+  }
+
+  .bento__tile {
+    padding: 14px 16px;
+  }
+
+  .bento__big {
+    font-size: 44px;
+  }
+
+  .bento__big-mini {
+    font-size: 26px;
+  }
+
+  .bento__map {
+    min-height: 200px;
+  }
+
+  .bento__table {
+    font-size: 12px;
+
+    th, td {
+      padding: 5px 6px;
+    }
+  }
+}

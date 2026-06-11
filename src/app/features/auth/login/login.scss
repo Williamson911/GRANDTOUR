@@ -122,6 +122,17 @@
   text-align: center;
 }
 
+@media (max-width: 640px) {
+  .auth {
+    padding: 24px 14px;
+  }
+
+  .auth__card {
+    padding: 24px 20px 22px;
+    box-shadow: 6px 6px 0 0 var(--color-accent);
+  }
+}
+
 .auth__check {
   width: 64px;
   height: 64px;
