@@ -1,0 +1,16 @@
+@if (visible()) {
+  <aside class="signup-cta" [attr.data-lang]="lang()">
+    <button
+      type="button"
+      class="signup-cta__close"
+      (click)="dismiss()"
+      aria-label="Dismiss"
+    >
+      ×
+    </button>
+    <p class="signup-cta__body">{{ i18n.t('signupCta.body') }}</p>
+    <a class="signup-cta__cta" routerLink="/register">
+      {{ i18n.t('signupCta.cta') }}
+    </a>
+  </aside>
+}

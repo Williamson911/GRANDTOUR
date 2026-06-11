@@ -47,7 +47,7 @@
         {{ i18n.t('event.register') }}
       }
     </button>
-    @if (showDetail()) {
+    @if (showDetail() && loggedIn()) {
       <button
         type="button"
         class="event-list-item__detail"

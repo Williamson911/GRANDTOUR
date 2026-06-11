@@ -5,13 +5,14 @@ import { Event } from '../../core/models/event';
 import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
 import { EventListItem } from '../../shared/components/event-list-item/event-list-item';
+import { SignupCta } from '../../shared/components/signup-cta/signup-cta';
 
 type TypeFilter = 'all' | 'Regional' | 'Finals';
 type PeriodFilter = 'all' | 'upcoming' | 'past';
 
 @Component({
   selector: 'app-calendar',
-  imports: [EventListItem],
+  imports: [EventListItem, SignupCta],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })

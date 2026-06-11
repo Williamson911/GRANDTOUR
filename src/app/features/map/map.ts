@@ -15,13 +15,14 @@ import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
 import { createDarkTileLayer } from '../../core/utils/leaflet-tile';
 import { EventCard } from '../../shared/components/event-card/event-card';
+import { SignupCta } from '../../shared/components/signup-cta/signup-cta';
 
 const EUROPE_CENTER: L.LatLngTuple = [50.0, 10.0];
 const EUROPE_ZOOM = 4;
 
 @Component({
   selector: 'app-map',
-  imports: [EventCard],
+  imports: [EventCard, SignupCta],
   templateUrl: './map.html',
   styleUrl: './map.scss',
 })

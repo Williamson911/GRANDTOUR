@@ -107,6 +107,10 @@ const FR: Record<string, string> = {
   'verified.body': 'Ton compte est actif. Tu peux commencer à suivre ton circuit DBSCG.',
   'verified.cta': 'Continuer',
 
+  // Signup CTA banner (public pages)
+  'signupCta.body': 'Tu joues le circuit ? Crée ton compte pour suivre tes events, résultats et dépenses.',
+  'signupCta.cta': 'Créer mon compte',
+
   // Map view
   'map.legendTitle': 'Grand Tour',
   'map.eventsCount': '{count} events sur la saison',
@@ -410,6 +414,10 @@ const EN: Record<string, string> = {
   'verified.titleWithName': 'Welcome {username}!',
   'verified.body': 'Your account is active. You can start tracking your DBSCG circuit.',
   'verified.cta': 'Continue',
+
+  // Signup CTA banner (public pages)
+  'signupCta.body': 'Playing the circuit? Create your account to track events, results and expenses.',
+  'signupCta.cta': 'Create account',
 
   // Map view
   'map.legendTitle': 'Grand Tour',
