@@ -1,0 +1,70 @@
+<section class="auth" [attr.data-lang]="lang()">
+  @if (success()) {
+    <div class="auth__card auth__card--success">
+      <div class="auth__check" aria-hidden="true">✓</div>
+      <h1 class="auth__title">{{ i18n.t('reset.success.title') }}</h1>
+      <p class="auth__subtitle">{{ i18n.t('reset.success.body') }}</p>
+    </div>
+  } @else {
+    <form
+      class="auth__card"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      autocomplete="on"
+      novalidate
+    >
+      <h1 class="auth__title">{{ i18n.t('reset.title') }}</h1>
+      <p class="auth__subtitle">{{ i18n.t('reset.body') }}</p>
+
+      <label class="auth__field">
+        <span>{{ i18n.t('reset.newPassword') }}</span>
+        <input
+          type="password"
+          name="newPassword"
+          formControlName="newPassword"
+          autocomplete="new-password"
+          required
+        />
+        @if (form.get('newPassword'); as ctrl) {
+          @if (ctrl.touched && ctrl.errors?.['required']) {
+            <small class="auth__field-error">
+              {{ i18n.t('reset.errors.required') }}
+            </small>
+          } @else if (ctrl.touched && ctrl.errors?.['minlength']) {
+            <small class="auth__field-error">
+              {{ i18n.t('reset.errors.minLength') }}
+            </small>
+          }
+        }
+      </label>
+
+      <label class="auth__field">
+        <span>{{ i18n.t('reset.confirmPassword') }}</span>
+        <input
+          type="password"
+          name="newPasswordConfirm"
+          formControlName="newPasswordConfirm"
+          autocomplete="new-password"
+          required
+        />
+        @if (form.touched && form.errors?.['passwordsMismatch']) {
+          <small class="auth__field-error">
+            {{ i18n.t('reset.errors.passwordsMismatch') }}
+          </small>
+        }
+      </label>
+
+      @if (formError()) {
+        <p class="auth__error" role="alert">{{ formError() }}</p>
+      }
+
+      <button type="submit" class="auth__submit" [disabled]="busy()">
+        @if (busy()) {
+          {{ i18n.t('reset.busy') }}
+        } @else {
+          {{ i18n.t('reset.submit') }}
+        }
+      </button>
+    </form>
+  }
+</section>

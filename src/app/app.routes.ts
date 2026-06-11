@@ -1,16 +1,19 @@
 import { Routes } from '@angular/router';
 
 import { authGuard, guestOnlyGuard } from './core/guards/auth-guard';
-import { Profile } from './features/profile/profile'
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'map' },
   {
-    path: 'profile',
-    canActivate: [authGuard],
+    path: 'map',
+    loadComponent: () => import('./features/map/map').then((m) => m.Map),
+    title: 'Carte — Grand Tour',
+  },
+  {
+    path: 'calendar',
     loadComponent: () =>
-      import('./features/profile/profile').then((m) => m.Profile),
-    title: 'Profile — Grand Tour',
+      import('./features/calendar/calendar').then((m) => m.Calendar),
+    title: 'Calendrier — Grand Tour',
   },
   {
     path: 'login',
@@ -36,17 +39,23 @@ export const routes: Routes = [
     title: 'Mot de passe oublié — Grand Tour',
   },
   {
-    path: 'map',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/map/map').then((m) => m.Map),
-    title: 'Carte — Grand Tour',
+    path: 'auth/verified',
+    loadComponent: () =>
+      import('./features/auth/verified/verified').then((m) => m.Verified),
+    title: 'Compte vérifié — Grand Tour',
   },
   {
-    path: 'calendar',
+    path: 'auth/reset',
+    loadComponent: () =>
+      import('./features/auth/reset/reset').then((m) => m.Reset),
+    title: 'Réinitialisation — Grand Tour',
+  },
+  {
+    path: 'profile',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/calendar/calendar').then((m) => m.Calendar),
-    title: 'Calendrier — Grand Tour',
+      import('./features/profile/profile').then((m) => m.Profile),
+    title: 'Profile — Grand Tour',
   },
   {
     path: 'season',

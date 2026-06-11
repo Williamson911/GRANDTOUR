@@ -115,12 +115,6 @@
             <dt>{{ i18n.t('profile.createdAt') }}</dt>
             <dd>{{ u.createdAt | date: 'longDate' : undefined : dateLocale() }}</dd>
           </div>
-          <div>
-            <dt>{{ i18n.t('profile.recoveryCodeUpdatedAt') }}</dt>
-            <dd>
-              {{ u.recoveryCodeUpdatedAt | date: 'longDate' : undefined : dateLocale() }}
-            </dd>
-          </div>
         </dl>
         <a class="profile__link" routerLink="/forgot-password">
           {{ i18n.t('profile.changePassword') }} →

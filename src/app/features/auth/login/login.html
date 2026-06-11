@@ -10,17 +10,22 @@
     <p class="auth__subtitle">{{ i18n.t('login.subtitle') }}</p>
 
     <label class="auth__field">
-      <span>{{ i18n.t('login.usernameOrEmail') }}</span>
+      <span>{{ i18n.t('login.email') }}</span>
       <input
-        type="text"
-        name="usernameOrEmail"
-        formControlName="usernameOrEmail"
+        type="email"
+        name="email"
+        formControlName="email"
+        autocomplete="email"
         required
       />
-      @if (form.get('usernameOrEmail'); as ctrl) {
+      @if (form.get('email'); as ctrl) {
         @if (ctrl.touched && ctrl.errors?.['required']) {
           <small class="auth__field-error">
-            {{ i18n.t('login.errors.identifierRequired') }}
+            {{ i18n.t('login.errors.emailRequired') }}
+          </small>
+        } @else if (ctrl.touched && ctrl.errors?.['email']) {
+          <small class="auth__field-error">
+            {{ i18n.t('login.errors.emailInvalid') }}
           </small>
         }
       }
@@ -44,17 +49,24 @@
       }
     </label>
 
-    <label class="auth__remember">
-      <input type="checkbox" formControlName="remember" />
-      <span>{{ i18n.t('login.remember') }}</span>
-    </label>
-
     <p class="auth__forgot">
       <a routerLink="/forgot-password">{{ i18n.t('login.forgotLink') }}</a>
     </p>
 
-    @if (error()) {
-      <p class="auth__error" role="alert">{{ error() }}</p>
+    @if (error() === 'invalid-credentials') {
+      <p class="auth__error" role="alert">{{ i18n.t('login.errors.invalid') }}</p>
+    }
+    @if (error() === 'email-not-confirmed') {
+      <p class="auth__error" role="alert">
+        {{ i18n.t('login.errors.emailNotConfirmed') }}
+        <button type="button" class="auth__inline-action" (click)="resend()" [disabled]="resendBusy()">
+          @if (resendSent()) {
+            {{ i18n.t('login.errors.resendDone') }}
+          } @else {
+            {{ i18n.t('login.errors.resendLink') }}
+          }
+        </button>
+      </p>
     }
 
     <button type="submit" class="auth__submit" [disabled]="busy()">

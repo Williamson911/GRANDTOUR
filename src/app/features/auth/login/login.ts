@@ -25,13 +25,14 @@ export class Login {
   protected readonly i18n = inject(I18nService);
 
   protected readonly lang = this.i18n.lang;
-  protected readonly error = signal('');
+  protected readonly error = signal<'invalid-credentials' | 'email-not-confirmed' | ''>('');
   protected readonly busy = signal(false);
+  protected readonly resendBusy = signal(false);
+  protected readonly resendSent = signal(false);
 
   protected readonly form: FormGroup = this.fb.group({
-    usernameOrEmail: ['', { validators: [Validators.required] }],
+    email: ['', { validators: [Validators.required, Validators.email] }],
     password: ['', { validators: [Validators.required] }],
-    remember: [true],
   });
 
   protected async submit(): Promise<void> {
@@ -39,24 +40,28 @@ export class Login {
     if (this.form.invalid || this.busy()) return;
 
     this.error.set('');
+    this.resendSent.set(false);
     this.busy.set(true);
-    const emailSaisi = this.form.value.usernameOrEmail; // 1. On récupère la saisie de l'utilisateur
-
     const result = await this.auth.login({
-      usernameOrEmail: emailSaisi,
+      email: this.form.value.email,
       password: this.form.value.password,
-      remember: !!this.form.value.remember,
     });
     this.busy.set(false);
 
     if (!result.ok) {
-      this.error.set(this.i18n.t('login.error'));
+      this.error.set(result.reason);
       return;
     }
-    localStorage.setItem('token', 'un-faux-jwt-token-pour-le-guard');
-    localStorage.setItem('currentUserEmail', emailSaisi);
-
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo') ?? '/map';
     this.router.navigateByUrl(returnTo);
+  }
+
+  protected async resend(): Promise<void> {
+    const email = this.form.value.email?.trim();
+    if (!email || this.resendBusy()) return;
+    this.resendBusy.set(true);
+    await this.auth.resendConfirmation(email);
+    this.resendBusy.set(false);
+    this.resendSent.set(true);
   }
 }

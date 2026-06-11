@@ -1,6 +1,3 @@
-@if (online() === false) {
-  <app-server-down />
-} @else if (online() === true) {
 <div class="shell" [class.shell--menu-open]="menuOpen()">
   <header class="topbar">
     <a class="brand" routerLink="/map">
@@ -13,32 +10,56 @@
       <span class="brand__sub brand__sub--short">{{ i18n.t('header.subtitleShort') }}</span>
     </a>
 
-    @if (session()) {
-      <button
-        type="button"
-        class="topbar__burger"
-        [class.topbar__burger--open]="menuOpen()"
-        [attr.aria-expanded]="menuOpen()"
-        aria-label="Menu"
-        (click)="toggleMenu()"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-    }
+    <button
+      type="button"
+      class="topbar__burger"
+      [class.topbar__burger--open]="menuOpen()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-label="Menu"
+      (click)="toggleMenu()"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
 
     <nav class="nav" [class.nav--open]="menuOpen()" aria-label="Navigation">
-      @if (session(); as s) {
-        @for (item of nav; track item.path) {
-          <a
-            class="nav__link"
-            [routerLink]="item.path"
-            routerLinkActive="nav__link--active"
-          >
-            {{ i18n.t(item.labelKey) }}
-          </a>
-        }
+      <a
+        class="nav__link"
+        routerLink="/map"
+        routerLinkActive="nav__link--active"
+      >
+        {{ i18n.t('nav.map') }}
+      </a>
+      <a
+        class="nav__link"
+        routerLink="/calendar"
+        routerLinkActive="nav__link--active"
+      >
+        {{ i18n.t('nav.calendar') }}
+      </a>
+      @if (session()) {
+        <a
+          class="nav__link"
+          routerLink="/season"
+          routerLinkActive="nav__link--active"
+        >
+          {{ i18n.t('nav.season') }}
+        </a>
+        <a
+          class="nav__link"
+          routerLink="/budget"
+          routerLinkActive="nav__link--active"
+        >
+          {{ i18n.t('nav.budget') }}
+        </a>
+        <a
+          class="nav__link"
+          routerLink="/dashboard"
+          routerLinkActive="nav__link--active"
+        >
+          {{ i18n.t('nav.dashboard') }}
+        </a>
       } @else {
         <a
           class="nav__link"
@@ -75,14 +96,14 @@
         </button>
       </div>
 
-      @if (session(); as s) {
+      @if (currentUser(); as user) {
         <a
           class="nav__user"
           routerLink="/profile"
           routerLinkActive="nav__user--active"
           [title]="i18n.t('nav.profileTooltip')"
         >
-          {{ i18n.t('nav.greeting') }} <strong>{{ s.username }}</strong>
+          {{ i18n.t('nav.greeting') }} <strong>{{ user.username }}</strong>
         </a>
         <button type="button" class="nav__logout" (click)="logout()">
           {{ i18n.t('nav.logout') }}
@@ -94,4 +115,3 @@
     <router-outlet />
   </main>
 </div>
-}

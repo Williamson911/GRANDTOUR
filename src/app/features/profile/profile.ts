@@ -134,8 +134,8 @@ export class Profile {
     }
   }
 
-  protected logout(): void {
-    this.auth.logout();
+  protected async logout(): Promise<void> {
+    await this.auth.logout();
     this.router.navigate(['/login']);
   }
 }

@@ -1,59 +1,72 @@
-import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
-import { API_BASE_URL } from '../config/api.config';
 import { Expense, ExpenseCategory } from '../models/expense';
 import { AuthService } from './auth';
+import { supabase } from './supabase';
 
-interface ExpenseRow extends Expense {
-  userId: string;
+interface ExpenseRow {
+  id: string;
+  event_id: string;
+  category: ExpenseCategory;
+  amount: number;
+  currency: string;
+  notes: string | null;
+  created_at: string;
 }
 
-const URL = `${API_BASE_URL}/expenses`;
+function toExpense(row: ExpenseRow): Expense {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    category: row.category,
+    amount: Number(row.amount),
+    currency: 'EUR',
+    ...(row.notes ? { notes: row.notes } : {}),
+    createdAt: new Date(row.created_at).getTime(),
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class BudgetService {
-  private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
-  private readonly _expenses = signal<ExpenseRow[]>([]);
+  private readonly _rows = signal<ExpenseRow[]>([]);
 
   readonly expenses: Signal<Expense[]> = computed(() =>
-    this._expenses().map(({ userId: _u, ...rest }) => rest),
+    this._rows().map(toExpense),
   );
   readonly totalAll = computed(() =>
-    this._expenses().reduce((sum, e) => sum + e.amount, 0),
+    this._rows().reduce((sum, e) => sum + Number(e.amount), 0),
   );
 
   constructor() {
     effect(async () => {
       const userId = this.auth.currentUserId();
       if (!userId) {
-        this._expenses.set([]);
+        this._rows.set([]);
         return;
       }
-      try {
-        const rows = await firstValueFrom(
-          this.http.get<ExpenseRow[]>(URL, { params: { userId } }),
-        );
-        this._expenses.set(rows);
-      } catch (err) {
-        console.error('expenses load failed', err);
-        this._expenses.set([]);
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('id, event_id, category, amount, currency, notes, created_at');
+      if (error) {
+        console.error('expenses load failed', error);
+        this._rows.set([]);
+        return;
       }
+      this._rows.set((data ?? []) as ExpenseRow[]);
     });
   }
 
   forEvent(eventId: string): Expense[] {
-    return this._expenses()
-      .filter((e) => e.eventId === eventId)
-      .map(({ userId: _u, ...rest }) => rest);
+    return this._rows()
+      .filter((e) => e.event_id === eventId)
+      .map(toExpense);
   }
 
   totalForEvent(eventId: string): number {
-    return this._expenses()
-      .filter((e) => e.eventId === eventId)
-      .reduce((sum, e) => sum + e.amount, 0);
+    return this._rows()
+      .filter((e) => e.event_id === eventId)
+      .reduce((sum, e) => sum + Number(e.amount), 0);
   }
 
   async add(input: {
@@ -64,33 +77,30 @@ export class BudgetService {
   }): Promise<void> {
     const userId = this.auth.currentUserId();
     if (!userId) return;
-    const draft = {
-      userId,
-      eventId: input.eventId,
-      category: input.category,
-      amount: input.amount,
-      currency: 'EUR' as const,
-      ...(input.notes ? { notes: input.notes } : {}),
-      createdAt: Date.now(),
-    };
-    try {
-      const created = await firstValueFrom(
-        this.http.post<ExpenseRow>(URL, draft),
-      );
-      this._expenses.update((list) => [...list, created]);
-    } catch (err) {
-      console.error('expense add failed', err);
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert({
+        user_id: userId,
+        event_id: input.eventId,
+        category: input.category,
+        amount: input.amount,
+        currency: 'EUR',
+        notes: input.notes ?? null,
+      })
+      .select('id, event_id, category, amount, currency, notes, created_at')
+      .single();
+    if (error) {
+      console.error('expense add failed', error);
+      return;
     }
+    this._rows.update((list) => [...list, data as ExpenseRow]);
   }
 
   async remove(id: string): Promise<void> {
     const userId = this.auth.currentUserId();
     if (!userId) return;
-    this._expenses.update((list) => list.filter((e) => e.id !== id));
-    try {
-      await firstValueFrom(this.http.delete(`${URL}/${id}`));
-    } catch (err) {
-      console.error('expense remove failed', err);
-    }
+    this._rows.update((list) => list.filter((e) => e.id !== id));
+    const { error } = await supabase.from('expenses').delete().eq('id', id);
+    if (error) console.error('expense remove failed', error);
   }
 }

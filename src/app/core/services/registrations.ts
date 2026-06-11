@@ -1,22 +1,15 @@
-import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
-import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './auth';
+import { supabase } from './supabase';
 
 interface RegistrationRow {
   id: string;
-  userId: string;
-  eventId: string;
-  createdAt: number;
+  event_id: string;
 }
-
-const URL = `${API_BASE_URL}/registrations`;
 
 @Injectable({ providedIn: 'root' })
 export class RegistrationsService {
-  private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly _ids = signal<ReadonlySet<string>>(new Set());
 
@@ -33,17 +26,18 @@ export class RegistrationsService {
         this._ids.set(new Set());
         return;
       }
-      try {
-        const rows = await firstValueFrom(
-          this.http.get<RegistrationRow[]>(URL, { params: { userId } }),
-        );
-        this.rowIdByEvent = new Map(rows.map((r) => [r.eventId, r.id]));
-        this._ids.set(new Set(rows.map((r) => r.eventId)));
-      } catch (err) {
-        console.error('registrations load failed', err);
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('id, event_id');
+      if (error) {
+        console.error('registrations load failed', error);
         this.rowIdByEvent.clear();
         this._ids.set(new Set());
+        return;
       }
+      const rows = (data ?? []) as RegistrationRow[];
+      this.rowIdByEvent = new Map(rows.map((r) => [r.event_id, r.id]));
+      this._ids.set(new Set(rows.map((r) => r.event_id)));
     });
   }
 
@@ -56,16 +50,17 @@ export class RegistrationsService {
     if (!userId) return;
 
     if (registered && !this._ids().has(eventId)) {
-      const draft = { userId, eventId, createdAt: Date.now() };
       this._ids.update((s) => new Set(s).add(eventId));
-      try {
-        const created = await firstValueFrom(
-          this.http.post<RegistrationRow>(URL, draft),
-        );
-        this.rowIdByEvent.set(eventId, created.id);
-      } catch (err) {
-        console.error('register failed', err);
+      const { data, error } = await supabase
+        .from('registrations')
+        .insert({ user_id: userId, event_id: eventId })
+        .select('id')
+        .single();
+      if (error) {
+        console.error('register failed', error);
+        return;
       }
+      if (data) this.rowIdByEvent.set(eventId, data.id);
     } else if (!registered && this._ids().has(eventId)) {
       const rowId = this.rowIdByEvent.get(eventId);
       this._ids.update((s) => {
@@ -75,11 +70,11 @@ export class RegistrationsService {
       });
       this.rowIdByEvent.delete(eventId);
       if (!rowId) return;
-      try {
-        await firstValueFrom(this.http.delete(`${URL}/${rowId}`));
-      } catch (err) {
-        console.error('unregister failed', err);
-      }
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .eq('id', rowId);
+      if (error) console.error('unregister failed', error);
     }
   }
 

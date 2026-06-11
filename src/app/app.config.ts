@@ -11,7 +11,7 @@ import {
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
-import { DataAvailabilityService } from './core/services/data-availability';
+import { AuthService } from './core/services/auth';
 
 registerLocaleData(localeFr);
 registerLocaleData(localeEnGb);
@@ -22,7 +22,23 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch()),
     provideAppInitializer(async () => {
-      await inject(DataAvailabilityService).probe();
+      const auth = inject(AuthService);
+      // Wait for Supabase to restore the session from localStorage.
+      await waitFor(() => auth.ready());
     }),
   ],
 };
+
+function waitFor(predicate: () => boolean, timeoutMs = 3000): Promise<void> {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (predicate() || Date.now() - start > timeoutMs) {
+        resolve();
+        return;
+      }
+      setTimeout(tick, 20);
+    };
+    tick();
+  });
+}
