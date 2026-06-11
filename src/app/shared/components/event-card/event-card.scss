@@ -6,27 +6,10 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-pop);
+  box-shadow: 10px 10px 0 0 var(--color-accent);
   position: relative;
   isolation: isolate;
   overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 4px;
-    background: var(--color-primary);
-    z-index: 1;
-  }
-
-  &--regional::before {
-    background: var(--color-accent);
-  }
-
-  &--finals::before {
-    background: var(--color-primary);
-  }
 }
 
 .event-card__header {

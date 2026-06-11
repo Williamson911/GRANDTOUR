@@ -40,21 +40,15 @@ export class ForgotPassword {
 
   protected readonly form: FormGroup = this.fb.group(
     {
-      usernameOrEmail: ['', { validators: [Validators.required], updateOn: 'blur' }],
-      recoveryCode: ['', { validators: [Validators.required], updateOn: 'blur' }],
+      usernameOrEmail: ['', { validators: [Validators.required] }],
+      recoveryCode: ['', { validators: [Validators.required] }],
       newPassword: [
         '',
-        {
-          validators: [Validators.required, Validators.minLength(8)],
-          updateOn: 'blur',
-        },
+        { validators: [Validators.required, Validators.minLength(8)] },
       ],
-      newPasswordConfirm: [
-        '',
-        { validators: [Validators.required], updateOn: 'blur' },
-      ],
+      newPasswordConfirm: ['', { validators: [Validators.required] }],
     },
-    { validators: [passwordsMatch], updateOn: 'blur' },
+    { validators: [passwordsMatch] },
   );
 
   protected async submit(): Promise<void> {

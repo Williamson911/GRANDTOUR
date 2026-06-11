@@ -1,4 +1,127 @@
-<section class="placeholder" [attr.data-lang]="lang()">
-  <h1>{{ i18n.t('placeholders.budget.title') }}</h1>
-  <p>{{ i18n.t('placeholders.budget.body') }}</p>
+<section class="budget" [attr.data-lang]="lang()">
+  <header class="budget__head">
+    <div>
+      <h1>{{ i18n.t('budget.title') }}</h1>
+      <p>{{ i18n.t('budget.subtitle') }}</p>
+    </div>
+    <label class="budget__year">
+      <span>{{ i18n.t('budget.year') }}</span>
+      <select
+        [value]="selectedYear()"
+        (change)="onYearChange($any($event.target).value)"
+      >
+        @for (y of availableYears(); track y) {
+          <option [value]="y">{{ y }}</option>
+        }
+      </select>
+    </label>
+  </header>
+
+  <div class="budget__totals">
+    <article class="budget__stat">
+      <span class="budget__stat-label">{{ i18n.t('budget.totals.spent') }}</span>
+      <strong class="budget__stat-value">{{ totals().spent | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+    </article>
+    <article class="budget__stat">
+      <span class="budget__stat-label">{{ i18n.t('budget.totals.prizes') }}</span>
+      <strong class="budget__stat-value">{{ totals().prizes | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+    </article>
+    <article class="budget__stat">
+      <span class="budget__stat-label">{{ i18n.t('budget.totals.net') }}</span>
+      <strong class="budget__stat-value" [class]="netClass(totals().net)">
+        {{ totals().net | currency: 'EUR' : 'symbol' : '1.0-0' }}
+      </strong>
+    </article>
+  </div>
+
+  <section class="budget__section">
+    <header class="budget__section-head">
+      <h2>{{ i18n.t('budget.byCategory.title') }}</h2>
+    </header>
+    @if (byCategory().length === 0) {
+      <p class="budget__empty">{{ i18n.t('budget.byCategory.empty') }}</p>
+    } @else {
+      <ul class="budget__bars">
+        @for (row of byCategory(); track row.category) {
+          <li class="budget__bar">
+            <span class="budget__bar-label">{{ categoryLabel(row.category) }}</span>
+            <span class="budget__bar-track">
+              <span
+                class="budget__bar-fill"
+                [style.width.%]="row.share * 100"
+              ></span>
+            </span>
+            <span class="budget__bar-amount">
+              {{ row.amount | currency: 'EUR' : 'symbol' : '1.0-0' }}
+            </span>
+            <span class="budget__bar-share">
+              {{ row.share * 100 | number: '1.0-0' }}%
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="budget__section">
+    <header class="budget__section-head">
+      <h2>{{ i18n.t('budget.byEvent.title') }}</h2>
+    </header>
+    @if (sortedByEvent().length === 0) {
+      <p class="budget__empty">{{ i18n.t('budget.byEvent.empty') }}</p>
+    } @else {
+      <div class="budget__table-wrap">
+        <table class="budget__table">
+          <thead>
+            <tr>
+              <th>
+                <button type="button" (click)="toggleSort('event')">
+                  {{ i18n.t('budget.byEvent.col.event') }}{{ sortIndicator('event') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" (click)="toggleSort('date')">
+                  {{ i18n.t('budget.byEvent.col.date') }}{{ sortIndicator('date') }}
+                </button>
+              </th>
+              <th class="budget__num">
+                <button type="button" (click)="toggleSort('spent')">
+                  {{ i18n.t('budget.byEvent.col.spent') }}{{ sortIndicator('spent') }}
+                </button>
+              </th>
+              <th class="budget__num">
+                <button type="button" (click)="toggleSort('prizes')">
+                  {{ i18n.t('budget.byEvent.col.prizes') }}{{ sortIndicator('prizes') }}
+                </button>
+              </th>
+              <th class="budget__num">
+                <button type="button" (click)="toggleSort('net')">
+                  {{ i18n.t('budget.byEvent.col.net') }}{{ sortIndicator('net') }}
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of sortedByEvent(); track row.eventId) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/event', row.eventId]">{{ row.eventName }}</a>
+                </td>
+                <td>{{ row.date | date: 'mediumDate' : undefined : dateLocale() }}</td>
+                <td class="budget__num">
+                  {{ row.spent | currency: 'EUR' : 'symbol' : '1.0-0' }}
+                </td>
+                <td class="budget__num">
+                  {{ row.prizes | currency: 'EUR' : 'symbol' : '1.0-0' }}
+                </td>
+                <td class="budget__num" [class]="netClass(row.net)">
+                  {{ row.net | currency: 'EUR' : 'symbol' : '1.0-0' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 </section>

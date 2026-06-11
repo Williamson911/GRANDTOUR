@@ -1,6 +1,7 @@
 import {
   afterNextRender,
   Component,
+  effect,
   ElementRef,
   inject,
   OnDestroy,
@@ -12,13 +13,11 @@ import * as L from 'leaflet';
 import { Event } from '../../core/models/event';
 import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
+import { createDarkTileLayer } from '../../core/utils/leaflet-tile';
 import { EventCard } from '../../shared/components/event-card/event-card';
 
 const EUROPE_CENTER: L.LatLngTuple = [50.0, 10.0];
 const EUROPE_ZOOM = 4;
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
-const TILE_ATTR =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 @Component({
   selector: 'app-map',
@@ -44,6 +43,10 @@ export class Map implements OnDestroy {
       this.initMap();
       this.drawMarkers();
     });
+    effect(() => {
+      this.all();
+      if (this.markerLayer) this.drawMarkers();
+    });
   }
 
   ngOnDestroy(): void {
@@ -64,11 +67,7 @@ export class Map implements OnDestroy {
       worldCopyJump: true,
     });
 
-    L.tileLayer(TILE_URL, {
-      maxZoom: 18,
-      attribution: TILE_ATTR,
-      subdomains: 'abcd',
-    }).addTo(this.leafletMap);
+    createDarkTileLayer().addTo(this.leafletMap);
 
     this.markerLayer = L.layerGroup().addTo(this.leafletMap);
 

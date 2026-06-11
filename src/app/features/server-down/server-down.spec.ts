@@ -1,20 +1,19 @@
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
 
-import { Dashboard } from './dashboard';
+import { ServerDown } from './server-down';
 
-describe('Dashboard', () => {
-  let component: Dashboard;
-  let fixture: ComponentFixture<Dashboard>;
+describe('ServerDown', () => {
+  let component: ServerDown;
+  let fixture: ComponentFixture<ServerDown>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Dashboard],
-      providers: [provideHttpClient(), provideRouter([])],
+      imports: [ServerDown],
+      providers: [provideHttpClient()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Dashboard);
+    fixture = TestBed.createComponent(ServerDown);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
@@ -23,9 +22,9 @@ describe('Dashboard', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders the dashboard title', () => {
+  it('renders the "npm run db" hint', () => {
     fixture.detectChanges();
     const html = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(html).toContain('Dashboard');
+    expect(html).toContain('npm run db');
   });
 });

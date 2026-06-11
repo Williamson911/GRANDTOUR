@@ -13,8 +13,8 @@
       <span>{{ i18n.t('login.usernameOrEmail') }}</span>
       <input
         type="text"
+        name="usernameOrEmail"
         formControlName="usernameOrEmail"
-        autocomplete="username"
         required
       />
       @if (form.get('usernameOrEmail'); as ctrl) {
@@ -30,6 +30,7 @@
       <span>{{ i18n.t('login.password') }}</span>
       <input
         type="password"
+        name="password"
         formControlName="password"
         autocomplete="current-password"
         required

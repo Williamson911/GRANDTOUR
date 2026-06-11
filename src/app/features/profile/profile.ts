@@ -63,22 +63,16 @@ export class Profile {
             Validators.maxLength(20),
             Validators.pattern(/^[A-Za-z0-9_-]+$/),
           ],
-          updateOn: 'blur',
         },
       ],
       email: [
         '',
         {
           validators: [Validators.required, Validators.email],
-          updateOn: 'blur',
         },
       ],
-      bandaiTcgId: [
-        '',
-        { validators: [bandaiIdValidator], updateOn: 'blur' },
-      ],
+      bandaiTcgId: ['', { validators: [bandaiIdValidator] }],
     },
-    { updateOn: 'blur' },
   );
 
   constructor() {
@@ -127,12 +121,12 @@ export class Profile {
     setTimeout(() => this.success.set(false), 2500);
   }
 
-  protected deleteAccount(): void {
+  protected async deleteAccount(): Promise<void> {
     if (this.busy()) return;
     if (!confirm(this.i18n.t('profile.deleteConfirm'))) return;
 
     this.busy.set(true);
-    const ok = this.auth.deleteAccount();
+    const ok = await this.auth.deleteAccount();
     if (ok) {
       this.router.navigate(['/login']);
     } else {

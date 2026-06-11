@@ -1,4 +1,190 @@
-<section class="placeholder" [attr.data-lang]="lang()">
-  <h1>{{ i18n.t('placeholders.dashboard.title') }}</h1>
-  <p>{{ i18n.t('placeholders.dashboard.body') }}</p>
+<section class="dashboard" [attr.data-lang]="lang()">
+  <header class="dashboard__head">
+    <div>
+      <h1>{{ i18n.t('dashboard.title') }}</h1>
+      <p>{{ i18n.t('dashboard.subtitle') }}</p>
+    </div>
+    <label class="dashboard__year">
+      <span>{{ i18n.t('dashboard.year') }}</span>
+      <select
+        [value]="selectedYear()"
+        (change)="onYearChange($any($event.target).value)"
+      >
+        @for (y of availableYears(); track y) {
+          <option [value]="y">{{ y }}</option>
+        }
+      </select>
+    </label>
+  </header>
+
+  <div class="bento">
+    <!-- Win rate global -->
+    <article class="bento__tile bento__tile--wr">
+      <h2 class="bento__title">{{ i18n.t('dashboard.wr.title') }}</h2>
+      @if (wr().played > 0) {
+        <div class="bento__big">{{ formatWinRate(wr().winRate) }}</div>
+        <p class="bento__sub">{{ recordLabel() }}</p>
+        <p class="bento__muted">{{ playedLabel() }}</p>
+      } @else {
+        <p class="bento__empty">{{ i18n.t('dashboard.empty') }}</p>
+      }
+    </article>
+
+    <!-- Best placement -->
+    <article class="bento__tile bento__tile--best">
+      <h2 class="bento__title">{{ i18n.t('dashboard.best.title') }}</h2>
+      @if (best(); as b) {
+        <div class="bento__medal">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="13" r="9" fill="var(--color-accent)" />
+            <circle cx="16" cy="13" r="5.5" fill="var(--color-bg)" />
+            <text
+              x="16"
+              y="16.5"
+              text-anchor="middle"
+              font-size="7"
+              font-weight="700"
+              fill="var(--color-accent)"
+            >
+              #{{ b.placement }}
+            </text>
+            <path
+              d="M9 20 L7 30 L13 27 L16 30 L19 27 L25 30 L23 20 Z"
+              fill="var(--color-primary)"
+            />
+          </svg>
+        </div>
+        <p class="bento__big-mini">#{{ b.placement }}</p>
+        <p class="bento__muted">{{ bestOutOfLabel() }}</p>
+        <p class="bento__sub">{{ b.eventName }}</p>
+      } @else {
+        <p class="bento__empty">{{ i18n.t('dashboard.best.empty') }}</p>
+      }
+    </article>
+
+    <!-- Cities visited -->
+    <article class="bento__tile bento__tile--map">
+      <h2 class="bento__title">{{ i18n.t('dashboard.cities.title') }}</h2>
+      @if (citiesCount() > 0) {
+        <p class="bento__sub">{{ citiesLabel() }}</p>
+        <div class="bento__map" #cityMap></div>
+      } @else {
+        <p class="bento__empty">{{ i18n.t('dashboard.cities.empty') }}</p>
+      }
+    </article>
+
+    <!-- Matchup breakdown -->
+    <article class="bento__tile bento__tile--matchup">
+      <header class="bento__tile-head">
+        <h2 class="bento__title">{{ i18n.t('dashboard.matchup.title') }}</h2>
+        <label class="bento__filter">
+          <span>{{ i18n.t('dashboard.matchup.deckFilter') }}</span>
+          <select
+            [value]="selectedDeck()"
+            (change)="onDeckChange($any($event.target).value)"
+          >
+            <option value="">{{ i18n.t('dashboard.matchup.all') }}</option>
+            @for (row of deckRows(); track row.deckName) {
+              <option [value]="row.deckName">{{ row.deckName }}</option>
+            }
+          </select>
+        </label>
+      </header>
+      @if (matchupRows().length === 0) {
+        <p class="bento__empty">{{ i18n.t('dashboard.matchup.empty') }}</p>
+      } @else {
+        <table class="bento__table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('dashboard.matchup.col.opp') }}</th>
+              <th class="bento__num">{{ i18n.t('dashboard.matchup.col.n') }}</th>
+              <th class="bento__num">{{ i18n.t('dashboard.matchup.col.wr') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of matchupRows(); track row.opponentLeader) {
+              <tr>
+                <td>{{ row.opponentLeader }}</td>
+                <td class="bento__num">{{ row.played }}</td>
+                <td class="bento__num">{{ formatWinRate(row.winRate) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </article>
+
+    <!-- Win rate par deck -->
+    <article class="bento__tile bento__tile--deck">
+      <h2 class="bento__title">{{ i18n.t('dashboard.deck.title') }}</h2>
+      @if (deckRows().length === 0) {
+        <p class="bento__empty">{{ i18n.t('dashboard.deck.empty') }}</p>
+      } @else {
+        <table class="bento__table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('dashboard.deck.col.deck') }}</th>
+              <th class="bento__num">{{ i18n.t('dashboard.deck.col.n') }}</th>
+              <th class="bento__num">{{ i18n.t('dashboard.deck.col.wr') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of deckRows(); track row.deckName) {
+              <tr>
+                <td>{{ row.deckName }}</td>
+                <td class="bento__num">{{ row.played }}</td>
+                <td class="bento__num">{{ formatWinRate(row.winRate) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </article>
+
+    <!-- Bilan financier -->
+    <article class="bento__tile bento__tile--money">
+      <h2 class="bento__title">{{ i18n.t('dashboard.money.title') }}</h2>
+      <ul class="bento__money">
+        <li>
+          <span>{{ i18n.t('budget.totals.spent') }}</span>
+          <strong>{{ money().spent | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+        </li>
+        <li>
+          <span>{{ i18n.t('budget.totals.prizes') }}</span>
+          <strong>{{ money().prizes | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+        </li>
+        <li>
+          <span>{{ i18n.t('budget.totals.net') }}</span>
+          <strong
+            [class.bento__net--positive]="money().net > 0"
+            [class.bento__net--negative]="money().net < 0"
+          >
+            {{ money().net | currency: 'EUR' : 'symbol' : '1.0-0' }}
+          </strong>
+        </li>
+      </ul>
+      <a class="bento__link" [routerLink]="['/budget']">
+        {{ i18n.t('dashboard.money.seeDetail') }}
+      </a>
+    </article>
+
+    <!-- Prochains events -->
+    <article class="bento__tile bento__tile--next">
+      <h2 class="bento__title">{{ i18n.t('dashboard.next.title') }}</h2>
+      @if (nextEvents().length === 0) {
+        <p class="bento__empty">{{ i18n.t('dashboard.next.empty') }}</p>
+      } @else {
+        <ul class="bento__next">
+          @for (e of nextEvents(); track e.id) {
+            <li>
+              <a [routerLink]="['/event', e.id]">
+                <strong>{{ e.name }}</strong>
+                <span>{{ e.date | date: 'mediumDate' : undefined : dateLocale() }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </article>
+  </div>
 </section>

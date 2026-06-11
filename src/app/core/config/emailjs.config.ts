@@ -4,11 +4,13 @@
  * To enable confirmation emails:
  * 1. Create a free account at https://www.emailjs.com/
  * 2. Add an Email Service (Gmail / Outlook / etc.) — copy the Service ID
- * 3. Create an Email Template using these dynamic fields:
+ * 3. Create ONE Email Template that includes both languages via the
+ *    `{{#if lang_en}}…{{else}}…{{/if}}` Handlebars helper. Dynamic fields:
  *      {{to_email}}      → recipient address
  *      {{username}}      → username of the new account
  *      {{recovery_code}} → recovery code (to save for password reset)
  *      {{app_name}}      → "Grand Tour"
+ *      {{lang_en}}       → "true" when the user signed up in English, "" otherwise
  *    Copy the Template ID
  * 4. From Account → API Keys, copy your Public Key
  * 5. Paste the three values below

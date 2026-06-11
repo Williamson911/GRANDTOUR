@@ -29,8 +29,8 @@ export class Login {
   protected readonly busy = signal(false);
 
   protected readonly form: FormGroup = this.fb.group({
-    usernameOrEmail: ['', { validators: [Validators.required], updateOn: 'blur' }],
-    password: ['', { validators: [Validators.required], updateOn: 'blur' }],
+    usernameOrEmail: ['', { validators: [Validators.required] }],
+    password: ['', { validators: [Validators.required] }],
     remember: [true],
   });
 

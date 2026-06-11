@@ -1,5 +1,15 @@
-import { computed, Injectable, signal, Signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  signal,
+  Signal,
+} from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
+import { API_BASE_URL } from '../config/api.config';
 import { PublicUser, Session, User } from '../models/user';
 import { generateSalt, hashPassword } from '../utils/password-hash';
 import {
@@ -7,12 +17,13 @@ import {
   hashRecoveryCode,
 } from '../utils/recovery-code';
 
-const USERS_KEY = 'grandtour.users.v1';
 const SESSION_KEY = 'grandtour.session.v1';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]+$/;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const BANDAI_RE = /^[0-9]{8,12}$/;
+
+const USERS_URL = `${API_BASE_URL}/users`;
 
 export type RegisterResult =
   | { ok: true; user: User; recoveryCode: string }
@@ -35,22 +46,29 @@ export type UpdateProfileResult =
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly http = inject(HttpClient);
+
   private readonly _session = signal<Session | null>(this.readSession());
-  private readonly _usersVersion = signal(0);
+  private readonly _currentUser = signal<PublicUser | null>(null);
 
   readonly session: Signal<Session | null> = this._session.asReadonly();
   readonly currentUserId: Signal<string | null> = computed(
     () => this._session()?.userId ?? null,
   );
-  readonly currentUser: Signal<PublicUser | null> = computed(() => {
-    this._usersVersion();
-    const session = this._session();
-    if (!session) return null;
-    const user = this.readUsers().find((u) => u.id === session.userId);
-    if (!user) return null;
-    const { passwordHash, salt, recoveryCodeHash, ...rest } = user;
-    return rest;
-  });
+  readonly currentUser: Signal<PublicUser | null> =
+    this._currentUser.asReadonly();
+
+  constructor() {
+    effect(async () => {
+      const userId = this.currentUserId();
+      if (!userId) {
+        this._currentUser.set(null);
+        return;
+      }
+      const user = await this.fetchUserById(userId);
+      this._currentUser.set(user ? stripUser(user) : null);
+    });
+  }
 
   async register(input: {
     username: string;
@@ -75,13 +93,10 @@ export class AuthService {
       return { ok: false, reason: 'invalid-fields' };
     }
 
-    const users = this.readUsers();
-    if (
-      users.some((u) => u.username.toLowerCase() === username.toLowerCase())
-    ) {
+    if (await this.usernameExists(username)) {
       return { ok: false, reason: 'username-taken' };
     }
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+    if (await this.emailExists(email)) {
       return { ok: false, reason: 'email-taken' };
     }
 
@@ -90,8 +105,7 @@ export class AuthService {
     const recoveryCode = generateRecoveryCode();
     const recoveryCodeHash = await hashRecoveryCode(recoveryCode, salt);
 
-    const user: User = {
-      id: crypto.randomUUID(),
+    const draft = {
       username,
       email,
       passwordHash,
@@ -102,12 +116,12 @@ export class AuthService {
       createdAt: Date.now(),
     };
 
-    this.writeUsers([...users, user]);
+    const created = await firstValueFrom(this.http.post<User>(USERS_URL, draft));
     this.openSession(
-      { userId: user.id, username: user.username },
+      { userId: created.id, username: created.username },
       input.remember ?? true,
     );
-    return { ok: true, user, recoveryCode };
+    return { ok: true, user: created, recoveryCode };
   }
 
   async login(input: {
@@ -119,9 +133,7 @@ export class AuthService {
     if (!id || !input.password) {
       return { ok: false, reason: 'invalid-credentials' };
     }
-    const user = this.readUsers().find(
-      (u) => u.username.toLowerCase() === id || u.email.toLowerCase() === id,
-    );
+    const user = await this.findUserByIdentifier(id);
     if (!user) return { ok: false, reason: 'invalid-credentials' };
 
     const hash = await hashPassword(input.password, user.salt);
@@ -143,13 +155,9 @@ export class AuthService {
       return { ok: false, reason: 'invalid-fields' };
     }
 
-    const users = this.readUsers();
-    const idx = users.findIndex(
-      (u) => u.username.toLowerCase() === id || u.email.toLowerCase() === id,
-    );
-    if (idx < 0) return { ok: false, reason: 'invalid-recovery' };
+    const user = await this.findUserByIdentifier(id);
+    if (!user) return { ok: false, reason: 'invalid-recovery' };
 
-    const user = users[idx];
     const codeHash = await hashRecoveryCode(input.recoveryCode, user.salt);
     if (codeHash !== user.recoveryCodeHash) {
       return { ok: false, reason: 'invalid-recovery' };
@@ -159,13 +167,13 @@ export class AuthService {
     const newRecoveryCode = generateRecoveryCode();
     const newRecoveryHash = await hashRecoveryCode(newRecoveryCode, user.salt);
 
-    users[idx] = {
-      ...user,
-      passwordHash: newPasswordHash,
-      recoveryCodeHash: newRecoveryHash,
-      recoveryCodeUpdatedAt: Date.now(),
-    };
-    this.writeUsers(users);
+    await firstValueFrom(
+      this.http.patch(`${USERS_URL}/${user.id}`, {
+        passwordHash: newPasswordHash,
+        recoveryCodeHash: newRecoveryHash,
+        recoveryCodeUpdatedAt: Date.now(),
+      }),
+    );
 
     return { ok: true, recoveryCode: newRecoveryCode };
   }
@@ -178,11 +186,9 @@ export class AuthService {
     const session = this._session();
     if (!session) return { ok: false, reason: 'not-authenticated' };
 
-    const users = this.readUsers();
-    const idx = users.findIndex((u) => u.id === session.userId);
-    if (idx < 0) return { ok: false, reason: 'not-authenticated' };
+    const current = await this.fetchUserById(session.userId);
+    if (!current) return { ok: false, reason: 'not-authenticated' };
 
-    const current = users[idx];
     const username = (patch.username ?? current.username).trim();
     const email = (patch.email ?? current.email).trim();
     const bandaiRaw =
@@ -203,21 +209,13 @@ export class AuthService {
 
     if (
       username.toLowerCase() !== current.username.toLowerCase() &&
-      users.some(
-        (u) =>
-          u.id !== current.id &&
-          u.username.toLowerCase() === username.toLowerCase(),
-      )
+      (await this.usernameExists(username, current.id))
     ) {
       return { ok: false, reason: 'username-taken' };
     }
     if (
       email.toLowerCase() !== current.email.toLowerCase() &&
-      users.some(
-        (u) =>
-          u.id !== current.id &&
-          u.email.toLowerCase() === email.toLowerCase(),
-      )
+      (await this.emailExists(email, current.id))
     ) {
       return { ok: false, reason: 'email-taken' };
     }
@@ -228,22 +226,27 @@ export class AuthService {
       email,
       bandaiTcgId: bandaiTcgId || undefined,
     };
-    users[idx] = updated;
-    this.writeUsers(users);
+    await firstValueFrom(
+      this.http.patch(`${USERS_URL}/${current.id}`, {
+        username,
+        email,
+        bandaiTcgId: bandaiTcgId || null,
+      }),
+    );
 
     if (username !== session.username) {
       this.openSession({ ...session, username }, this.isRemembered());
     }
+    this._currentUser.set(stripUser(updated));
 
-    const { passwordHash, salt, recoveryCodeHash, ...publicUser } = updated;
-    return { ok: true, user: publicUser };
+    return { ok: true, user: stripUser(updated) };
   }
 
-  deleteAccount(): boolean {
+  async deleteAccount(): Promise<boolean> {
     const session = this._session();
     if (!session) return false;
-    const users = this.readUsers().filter((u) => u.id !== session.userId);
-    this.writeUsers(users);
+    await this.cascadeDelete(session.userId);
+    await firstValueFrom(this.http.delete(`${USERS_URL}/${session.userId}`));
     this.logout();
     return true;
   }
@@ -256,6 +259,68 @@ export class AuthService {
     } catch {
       /* ignore */
     }
+  }
+
+  private async cascadeDelete(userId: string): Promise<void> {
+    const collections = ['registrations', 'results', 'expenses'] as const;
+    for (const col of collections) {
+      const rows = await firstValueFrom(
+        this.http.get<{ id: string }[]>(`${API_BASE_URL}/${col}`, {
+          params: { userId },
+        }),
+      );
+      for (const row of rows) {
+        await firstValueFrom(
+          this.http.delete(`${API_BASE_URL}/${col}/${row.id}`),
+        );
+      }
+    }
+  }
+
+  private async fetchUserById(id: string): Promise<User | null> {
+    try {
+      return await firstValueFrom(this.http.get<User>(`${USERS_URL}/${id}`));
+    } catch {
+      return null;
+    }
+  }
+
+  private async findUserByIdentifier(idLower: string): Promise<User | null> {
+    // Try by username (server filter is case-sensitive, we normalize)
+    const all = await firstValueFrom(this.http.get<User[]>(USERS_URL));
+    return (
+      all.find(
+        (u) =>
+          u.username.toLowerCase() === idLower ||
+          u.email.toLowerCase() === idLower,
+      ) ?? null
+    );
+  }
+
+  private async usernameExists(
+    username: string,
+    excludeId?: string,
+  ): Promise<boolean> {
+    const all = await firstValueFrom(this.http.get<User[]>(USERS_URL));
+    const target = username.toLowerCase();
+    return all.some(
+      (u) =>
+        u.username.toLowerCase() === target &&
+        (excludeId === undefined || u.id !== excludeId),
+    );
+  }
+
+  private async emailExists(
+    email: string,
+    excludeId?: string,
+  ): Promise<boolean> {
+    const all = await firstValueFrom(this.http.get<User[]>(USERS_URL));
+    const target = email.toLowerCase();
+    return all.some(
+      (u) =>
+        u.email.toLowerCase() === target &&
+        (excludeId === undefined || u.id !== excludeId),
+    );
   }
 
   private isRemembered(): boolean {
@@ -282,26 +347,6 @@ export class AuthService {
     }
   }
 
-  private readUsers(): User[] {
-    try {
-      const raw = localStorage.getItem(USERS_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private writeUsers(users: User[]): void {
-    try {
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      this._usersVersion.update((v) => v + 1);
-    } catch {
-      /* ignore */
-    }
-  }
-
   private readSession(): Session | null {
     try {
       const raw =
@@ -321,4 +366,9 @@ export class AuthService {
       return null;
     }
   }
+}
+
+function stripUser(user: User): PublicUser {
+  const { passwordHash, salt, recoveryCodeHash, ...rest } = user;
+  return rest;
 }

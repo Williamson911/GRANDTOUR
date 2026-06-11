@@ -67,36 +67,29 @@ export class Register {
             Validators.maxLength(20),
             Validators.pattern(/^[A-Za-z0-9_-]+$/),
           ],
-          updateOn: 'blur',
         },
       ],
       email: [
         '',
         {
           validators: [Validators.required, Validators.email],
-          updateOn: 'blur',
         },
       ],
       password: [
         '',
         {
           validators: [Validators.required, Validators.minLength(8)],
-          updateOn: 'blur',
         },
       ],
       passwordConfirm: [
         '',
         {
           validators: [Validators.required],
-          updateOn: 'blur',
         },
       ],
-      bandaiTcgId: [
-        '',
-        { validators: [bandaiIdValidator], updateOn: 'blur' },
-      ],
+      bandaiTcgId: ['', { validators: [bandaiIdValidator] }],
     },
-    { validators: [passwordsMatch], updateOn: 'blur' },
+    { validators: [passwordsMatch] },
   );
 
   protected async submit(): Promise<void> {
@@ -132,6 +125,7 @@ export class Register {
       toEmail: result.user.email,
       username: result.user.username,
       recoveryCode: result.recoveryCode,
+      lang: this.i18n.lang(),
     });
     this.busy.set(false);
 

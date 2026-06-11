@@ -1,0 +1,94 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.server-down {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-bg);
+}
+
+.server-down__card {
+  width: min(520px, 100%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-pop);
+
+  h1 {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    color: var(--color-text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.server-down__icon {
+  width: 56px;
+  height: 56px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.server-down__cmd {
+  width: 100%;
+  margin: 4px 0 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  text-align: left;
+  overflow-x: auto;
+
+  code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    color: var(--color-accent);
+  }
+}
+
+.server-down__cta {
+  margin-top: 8px;
+  background: var(--color-primary);
+  color: var(--color-text);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  transition: filter 120ms ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

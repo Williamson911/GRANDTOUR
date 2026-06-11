@@ -1,3 +1,6 @@
+@if (online() === false) {
+  <app-server-down />
+} @else if (online() === true) {
 <div class="shell">
   <header class="topbar">
     <a class="brand" routerLink="/map">
@@ -74,3 +77,4 @@
     <router-outlet />
   </main>
 </div>
+}

@@ -1,0 +1,55 @@
+{
+  "users": [
+    {
+      "username": "Will_EN",
+      "email": "lemetaleux_666_91@hotmail.com",
+      "passwordHash": "de759cf0ff563efb64e71901c043d3f7610f6f10c8662b8b72c2b846655fc638",
+      "salt": "31f304a2e75d27b0badfdb2e828ee0aa",
+      "recoveryCodeHash": "f24aa6434127208fe7149a69549381c694e0f6a41388003e3447ba17296b44bf",
+      "recoveryCodeUpdatedAt": 1781201541254,
+      "createdAt": 1781201541254,
+      "id": "r8rJXif4M6Q"
+    },
+    {
+      "username": "Lord_Williamson",
+      "email": "william.williamson.91@gmail.com",
+      "passwordHash": "119993336c3e05c6a7a9cf0f9f82529890a7e70d1c8c79635849d0bf1dc12827",
+      "salt": "fb6b676fa1120ae24371f9319a660b1b",
+      "recoveryCodeHash": "0642c221afbb1d2cd32491c1eb6faf0b9f79fdedab46a991682b505d0b710ed3",
+      "recoveryCodeUpdatedAt": 1781201858773,
+      "bandaiTcgId": "0000070693",
+      "createdAt": 1781201858773,
+      "id": "dlT_kbfYV_Y"
+    }
+  ],
+  "registrations": [
+    {
+      "userId": "dlT_kbfYV_Y",
+      "eventId": "w1-pec-occitania-rungis-2026-06",
+      "createdAt": 1781201883165,
+      "id": "sPEKEsPwFaA"
+    }
+  ],
+  "results": [],
+  "expenses": [
+    {
+      "userId": "dlT_kbfYV_Y",
+      "eventId": "w1-pec-occitania-rungis-2026-06",
+      "category": "Hotel",
+      "amount": 86.15,
+      "currency": "EUR",
+      "createdAt": 1781201908746,
+      "id": "zf3UHzM1pE4"
+    },
+    {
+      "userId": "dlT_kbfYV_Y",
+      "eventId": "w1-pec-occitania-rungis-2026-06",
+      "category": "Entry",
+      "amount": 38,
+      "currency": "EUR",
+      "createdAt": 1781201917988,
+      "id": "fa5oCYEVmn0"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
