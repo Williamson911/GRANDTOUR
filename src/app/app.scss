@@ -14,7 +14,7 @@
   align-items: center;
   gap: 32px;
   padding: 0 24px;
-  height: 84px;
+  height: 96px;
   background: var(--color-text);
   border-bottom: 2px solid var(--color-accent);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
@@ -31,7 +31,7 @@
   font-family: var(--font-display);
 
   &__logo {
-    height: 64px;
+    height: 74px;
     width: auto;
     display: block;
   }
@@ -51,6 +51,32 @@
 
   &__sub--short {
     display: none;
+  }
+}
+
+.powered-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 16px;
+  background: var(--color-bg);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  margin-left: 4px;
+
+  &__label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    white-space: nowrap;
+  }
+
+  &__logo {
+    height: 70px;
+    width: auto;
+    display: block;
   }
 }
 
@@ -215,14 +241,14 @@
   .topbar {
     gap: 16px;
     padding: 0 16px;
-    height: 72px;
+    height: 84px;
   }
 
   .brand {
     gap: 10px;
 
     &__logo {
-      height: 52px;
+      height: 62px;
     }
 
     &__sub {
@@ -247,18 +273,32 @@
     font-size: 12px;
     padding: 4px 8px;
   }
+
+  .powered-by {
+    padding: 4px 12px;
+    gap: 10px;
+
+    &__label {
+      font-size: 10px;
+      letter-spacing: 1.1px;
+    }
+
+    &__logo {
+      height: 60px;
+    }
+  }
 }
 
 /* ---------- Mobile ---------- */
 @media (max-width: 720px) {
   .topbar {
-    height: 64px;
+    height: 72px;
     padding: 0 14px;
   }
 
   .brand {
     &__logo {
-      height: 44px;
+      height: 52px;
     }
 
     &__sub--long {
@@ -273,13 +313,23 @@
     }
   }
 
+  .powered-by {
+    margin-left: auto;
+    padding: 3px 8px;
+    gap: 6px;
+
+    &__logo {
+      height: 48px;
+    }
+  }
+
   .topbar__burger {
     display: block;
   }
 
   .nav {
     position: fixed;
-    top: 64px;
+    top: 72px;
     left: 0;
     right: 0;
     margin: 0;
