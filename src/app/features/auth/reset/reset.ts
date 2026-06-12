@@ -7,7 +7,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth';
 import { I18nService } from '../../../core/services/i18n';
@@ -29,12 +29,20 @@ export class Reset {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   protected readonly i18n = inject(I18nService);
 
   protected readonly lang = this.i18n.lang;
   protected readonly busy = signal(false);
   protected readonly formError = signal('');
   protected readonly success = signal(false);
+
+  constructor() {
+    const langParam = this.route.snapshot.queryParamMap.get('lang');
+    if (langParam === 'fr' || langParam === 'en') {
+      this.i18n.setLang(langParam);
+    }
+  }
 
   protected readonly form: FormGroup = this.fb.group(
     {

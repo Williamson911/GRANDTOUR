@@ -2,6 +2,7 @@ import { computed, effect, inject, Injectable, signal, Signal } from '@angular/c
 import type { Session as SupabaseSession } from '@supabase/supabase-js';
 
 import { PublicUser, Session } from '../models/user';
+import { I18nService } from './i18n';
 import { supabase } from './supabase';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]+$/;
@@ -38,6 +39,7 @@ interface ProfileRow {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly i18n = inject(I18nService);
   private readonly _session = signal<Session | null>(null);
   private readonly _profile = signal<ProfileRow | null>(null);
   private readonly _ready = signal(false);
@@ -113,11 +115,20 @@ export class AuthService {
       return { ok: false, reason: 'invalid-fields' };
     }
 
+    // Pre-flight check: is the username already taken?
+    const { data: available, error: availError } = await supabase.rpc(
+      'username_available',
+      { check_username: username },
+    );
+    if (!availError && available === false) {
+      return { ok: false, reason: 'username-taken' };
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/verified`,
+        emailRedirectTo: `${window.location.origin}/auth/verified?lang=${this.i18n.lang()}`,
         data: {
           username,
           ...(bandaiTcgId ? { bandai_tcg_id: bandaiTcgId } : {}),
@@ -130,7 +141,11 @@ export class AuthService {
       if (msg.includes('already registered') || msg.includes('user already')) {
         return { ok: false, reason: 'email-taken' };
       }
-      if (msg.includes('profiles_username_key')) {
+      if (
+        msg.includes('profiles_username_key') ||
+        msg.includes('database error saving new user')
+      ) {
+        // Fallback if pre-flight check missed it (race condition or transient).
         return { ok: false, reason: 'username-taken' };
       }
       console.error('signup failed', error);
@@ -167,7 +182,7 @@ export class AuthService {
       type: 'signup',
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/verified`,
+        emailRedirectTo: `${window.location.origin}/auth/verified?lang=${this.i18n.lang()}`,
       },
     });
     return { ok: !error };
@@ -176,7 +191,7 @@ export class AuthService {
   async requestPasswordReset(email: string): Promise<ResetRequestResult> {
     // Always returns ok to avoid email enumeration.
     await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/reset`,
+      redirectTo: `${window.location.origin}/auth/reset?lang=${this.i18n.lang()}`,
     });
     return { ok: true };
   }
