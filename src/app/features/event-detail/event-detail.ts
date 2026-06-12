@@ -232,4 +232,10 @@ export class EventDetail {
   protected categoryLabel(category: ExpenseCategory): string {
     return this.i18n.t(`detail.expenses.cat.${category}`);
   }
+
+  protected blockNonNumeric(event: KeyboardEvent): void {
+    if (['e', 'E', '+', '-'].includes(event.key)) {
+      event.preventDefault();
+    }
+  }
 }

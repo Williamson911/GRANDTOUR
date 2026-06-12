@@ -85,9 +85,11 @@
             <span>{{ i18n.t('detail.result.prizes') }}</span>
             <input
               type="number"
+              inputmode="decimal"
               formControlName="prizes"
               min="0"
               step="0.01"
+              (keydown)="blockNonNumeric($event)"
             />
           </label>
           <label class="field field--full">
@@ -227,9 +229,11 @@
             <span>{{ i18n.t('detail.expenses.amount') }}</span>
             <input
               type="number"
+              inputmode="decimal"
               formControlName="amount"
               min="0"
               step="0.01"
+              (keydown)="blockNonNumeric($event)"
             />
           </label>
           <label class="field field--wide">

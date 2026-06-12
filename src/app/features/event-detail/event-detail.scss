@@ -348,8 +348,9 @@
 }
 
 .match__round {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 11px;
+  font-weight: 800;
   letter-spacing: 1px;
   color: var(--color-text-muted);
   text-align: center;
