@@ -54,6 +54,10 @@
   }
 }
 
+.powered-by--menu {
+  display: none;
+}
+
 .powered-by {
   display: inline-flex;
   align-items: center;
@@ -376,5 +380,24 @@
   .lang {
     align-self: center;
     margin: 8px 0;
+  }
+}
+
+/* ---------- Small mobile ---------- */
+@media (max-width: 480px) {
+  .powered-by--topbar {
+    display: none;
+  }
+
+  .powered-by--menu {
+    display: inline-flex;
+    align-self: center;
+    margin: 12px 0 4px;
+    padding: 4px 12px;
+    gap: 10px;
+
+    .powered-by__logo {
+      height: 44px;
+    }
   }
 }
