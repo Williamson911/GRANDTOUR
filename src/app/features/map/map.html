@@ -4,7 +4,7 @@
   <aside class="map-view__legend" aria-label="Legend">
     <h2>{{ i18n.t('map.legendTitle') }}</h2>
     <p class="map-view__count">
-      {{ i18n.t('map.eventsCount', { count: all().length }) }}
+      {{ i18n.t('map.eventsCount', { count: upcoming().length }) }}
     </p>
     <ul>
       <li><span class="legend-dot legend-dot--regional"></span> {{ i18n.t('map.legendRegional') }}</li>

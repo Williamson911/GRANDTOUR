@@ -1,6 +1,7 @@
 import {
   afterNextRender,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -35,7 +36,13 @@ export class Map implements OnDestroy {
   private resizeObserver?: ResizeObserver;
 
   protected readonly selected = signal<Event | null>(null);
-  protected readonly all = this.eventService.events;
+  protected readonly upcoming = computed(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return this.eventService
+      .events()
+      .filter((e) => new Date(e.date).getTime() >= startOfToday.getTime());
+  });
   protected readonly lang = this.i18n.lang;
 
   constructor() {
@@ -45,7 +52,7 @@ export class Map implements OnDestroy {
       this.drawMarkers();
     });
     effect(() => {
-      this.all();
+      this.upcoming();
       if (this.markerLayer) this.drawMarkers();
     });
   }
@@ -85,7 +92,7 @@ export class Map implements OnDestroy {
     if (!this.markerLayer) return;
     this.markerLayer.clearLayers();
 
-    for (const event of this.all()) {
+    for (const event of this.upcoming()) {
       const marker = L.marker([event.location.lat, event.location.lng], {
         icon: buildIcon(event),
         title: event.name,
