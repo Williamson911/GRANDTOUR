@@ -54,10 +54,6 @@
   }
 }
 
-.powered-by--menu {
-  display: none;
-}
-
 .powered-by {
   display: inline-flex;
   align-items: center;
@@ -81,6 +77,10 @@
     height: 70px;
     width: auto;
     display: block;
+  }
+
+  &--menu {
+    display: none;
   }
 }
 
