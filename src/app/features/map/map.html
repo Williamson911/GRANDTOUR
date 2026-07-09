@@ -9,7 +9,14 @@
     <ul>
       <li><span class="legend-dot legend-dot--regional"></span> {{ i18n.t('map.legendRegional') }}</li>
       <li><span class="legend-dot legend-dot--finals"></span> {{ i18n.t('map.legendFinals') }}</li>
-      <li><span class="legend-dot legend-dot--registered"></span> {{ i18n.t('map.legendRegistered') }}</li>
+      <li>
+        <span class="legend-dot-pair">
+          <span class="legend-dot legend-dot--regional legend-dot--registered"></span>
+          <span class="legend-dot-sep">/</span>
+          <span class="legend-dot legend-dot--finals legend-dot--registered"></span>
+        </span>
+        {{ i18n.t('map.legendRegistered') }}
+      </li>
     </ul>
   </aside>
 

@@ -112,6 +112,18 @@
   }
 }
 
+.legend-dot-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot-sep {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
 .legend-dot {
   width: 12px;
   height: 12px;
@@ -131,7 +143,6 @@
   }
 
   &--registered {
-    background: var(--color-primary);
     border-color: var(--color-text);
     position: relative;
     box-shadow: 0 0 0 2px var(--color-bg);
