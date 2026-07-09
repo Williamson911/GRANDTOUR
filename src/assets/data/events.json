@@ -59,5 +59,20 @@
     },
     "registerLink" : "https://my.weezevent.com/db-masters-madrid-2026",
     "registered": false
+  },
+  {
+    "id": "w2-gametrade-distribuzione-bologna-2026-09",
+    "name": "Gametrade Distribuzione — Bologna (Wave 2)",
+    "type": "Regional",
+    "date": "2026-09-13",
+    "location": {
+      "city": "Bologna",
+      "country": "Italy",
+      "venue": "Via Paolo Canali, 8",
+      "lat": 44.5179351355086,
+      "lng":  11.40929106994947
+    },
+    "registerLink": "https://www.dbs-cardgame.it/tornei/489/DBS_Card_Game_Master_Regional_2026_Season_2_-_Bologna",
+    "registered": false
   }
 ]

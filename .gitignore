@@ -47,3 +47,8 @@ __screenshots__/
 Thumbs.db
 
 docs/
+
+# Presentation assets
+images/*.pptx
+images/*.pdf
+images/Screenshot*.png
