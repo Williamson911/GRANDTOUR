@@ -69,6 +69,15 @@
         >
           {{ i18n.t('nav.dashboard') }}
         </a>
+        @if (isAdmin()) {
+          <a
+            class="nav__link"
+            routerLink="/admin/events"
+            routerLinkActive="nav__link--active"
+          >
+            {{ i18n.t('nav.admin') }}
+          </a>
+        }
       } @else {
         <a
           class="nav__link"

@@ -1,0 +1,178 @@
+<section class="admin" [attr.data-lang]="lang()">
+  <header class="admin__header">
+    <h1 class="admin__title">{{ i18n.t('admin.title') }}</h1>
+    <button type="button" class="admin__add" (click)="openCreate()">
+      {{ i18n.t('admin.addButton') }}
+    </button>
+  </header>
+
+  @if (listError()) {
+    <p class="admin__error" role="alert">{{ listError() }}</p>
+  }
+
+  @if (events().length === 0) {
+    <p class="admin__empty">{{ i18n.t('admin.empty') }}</p>
+  } @else {
+    <ul class="admin__list">
+      @for (event of events(); track event.id) {
+        <li class="admin__row">
+          <span
+            class="admin__badge"
+            [class.admin__badge--finals]="event.type === 'Finals'"
+          >
+            {{ event.type }}
+          </span>
+          <span class="admin__row-name">{{ event.name }}</span>
+          <span class="admin__row-place">
+            {{ event.location.city }}, {{ event.location.country }}
+          </span>
+          <span class="admin__row-date">{{ event.date | date: 'dd/MM/yyyy' }}</span>
+          <button type="button" class="admin__row-action" (click)="openEdit(event)">
+            {{ i18n.t('admin.editButton') }}
+          </button>
+          <button
+            type="button"
+            class="admin__row-action admin__row-action--danger"
+            (click)="remove(event)"
+          >
+            {{ i18n.t('admin.deleteButton') }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (formOpen()) {
+    <div class="admin__overlay" (click)="cancelForm()">
+      <form
+        class="admin__form"
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        (click)="$event.stopPropagation()"
+        novalidate
+      >
+        <h2 class="admin__form-title">
+          {{
+            editingId()
+              ? i18n.t('admin.form.editTitle')
+              : i18n.t('admin.form.createTitle')
+          }}
+        </h2>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.name') }}</span>
+          <input type="text" formControlName="name" required />
+          @if (form.get('name'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="admin__field-error">
+                {{ i18n.t('admin.errors.fieldRequired') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.type') }}</span>
+          <select formControlName="type" required>
+            <option value="Regional">{{ i18n.t('admin.form.typeRegional') }}</option>
+            <option value="Finals">{{ i18n.t('admin.form.typeFinals') }}</option>
+          </select>
+        </label>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.date') }}</span>
+          <input type="date" formControlName="date" required />
+          @if (form.get('date'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="admin__field-error">
+                {{ i18n.t('admin.errors.fieldRequired') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.city') }}</span>
+          <input type="text" formControlName="city" required />
+          @if (form.get('city'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="admin__field-error">
+                {{ i18n.t('admin.errors.fieldRequired') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.country') }}</span>
+          <input type="text" formControlName="country" required />
+          @if (form.get('country'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="admin__field-error">
+                {{ i18n.t('admin.errors.fieldRequired') }}
+              </small>
+            }
+          }
+        </label>
+
+        <label class="admin__field">
+          <span>{{ i18n.t('admin.form.venue') }}</span>
+          <input type="text" formControlName="venue" required />
+          @if (form.get('venue'); as ctrl) {
+            @if (ctrl.touched && ctrl.errors?.['required']) {
+              <small class="admin__field-error">
+                {{ i18n.t('admin.errors.fieldRequired') }}
+              </small>
+            }
+          }
+        </label>
+
+        <div class="admin__field-row">
+          <label class="admin__field">
+            <span>{{ i18n.t('admin.form.lat') }}</span>
+            <input type="number" step="any" formControlName="lat" required />
+          </label>
+          <label class="admin__field">
+            <span>{{ i18n.t('admin.form.lng') }}</span>
+            <input type="number" step="any" formControlName="lng" required />
+          </label>
+        </div>
+        @if (
+          (form.get('lat')?.touched && form.get('lat')?.errors?.['required']) ||
+          (form.get('lng')?.touched && form.get('lng')?.errors?.['required'])
+        ) {
+          <small class="admin__field-error">
+            {{ i18n.t('admin.errors.fieldRequired') }}
+          </small>
+        }
+
+        <label class="admin__field">
+          <span class="admin__field-label-row">
+            {{ i18n.t('admin.form.registerLink') }}
+            <em class="admin__optional">{{ i18n.t('admin.form.registerLinkOptional') }}</em>
+          </span>
+          <input type="url" formControlName="registerLink" />
+        </label>
+
+        @if (formError()) {
+          <p class="admin__error" role="alert">{{ formError() }}</p>
+        }
+
+        <div class="admin__form-actions">
+          <button type="button" class="admin__cancel" (click)="cancelForm()">
+            {{ i18n.t('admin.form.cancel') }}
+          </button>
+          <button type="submit" class="admin__submit" [disabled]="busy()">
+            @if (busy()) {
+              {{ i18n.t('admin.form.busy') }}
+            } @else if (editingId()) {
+              {{ i18n.t('admin.form.submitUpdate') }}
+            } @else {
+              {{ i18n.t('admin.form.submitCreate') }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

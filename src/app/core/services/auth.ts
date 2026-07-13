@@ -34,6 +34,7 @@ interface ProfileRow {
   id: string;
   username: string;
   bandai_tcg_id: string | null;
+  is_admin: boolean;
   created_at: string;
 }
 
@@ -61,6 +62,9 @@ export class AuthService {
       createdAt: p.created_at,
     };
   });
+  readonly isAdmin: Signal<boolean> = computed(
+    () => this._profile()?.is_admin ?? false,
+  );
 
   constructor() {
     // Bootstrap from any existing session, then subscribe.
@@ -81,7 +85,7 @@ export class AuthService {
       }
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, bandai_tcg_id, created_at')
+        .select('id, username, bandai_tcg_id, is_admin, created_at')
         .eq('id', userId)
         .maybeSingle();
       if (error) {
@@ -277,7 +281,7 @@ export class AuthService {
     // Re-fetch profile to get fresh state
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, bandai_tcg_id, created_at')
+      .select('id, username, bandai_tcg_id, is_admin, created_at')
       .eq('id', profile.id)
       .maybeSingle();
     if (data) this._profile.set(data as ProfileRow);

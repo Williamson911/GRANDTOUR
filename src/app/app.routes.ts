@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from './core/guards/admin-guard';
 import { authGuard, guestOnlyGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
@@ -86,6 +87,15 @@ export const routes: Routes = [
         (m) => m.EventDetail,
       ),
     title: 'Event — Grand Tour',
+  },
+  {
+    path: 'admin/events',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/admin-events/admin-events').then(
+        (m) => m.AdminEvents,
+      ),
+    title: 'Admin — Grand Tour',
   },
   { path: '**', redirectTo: 'map' },
 ];
