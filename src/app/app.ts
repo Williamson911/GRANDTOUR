@@ -24,6 +24,7 @@ export class App {
 
   protected readonly session = this.auth.session;
   protected readonly currentUser = this.auth.currentUser;
+  protected readonly isAdmin = this.auth.isAdmin;
   protected readonly lang = this.i18n.lang;
   protected readonly menuOpen = signal(false);
 
