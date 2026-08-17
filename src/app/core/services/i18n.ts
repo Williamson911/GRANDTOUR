@@ -131,10 +131,14 @@ const FR: Record<string, string> = {
   'reset.success.body': 'Redirection en cours…',
 
   // Verified screen (post email confirm)
+  'verified.loading': 'Confirmation en cours…',
   'verified.title': 'Compte vérifié !',
   'verified.titleWithName': 'Bienvenue {username} !',
-  'verified.body': 'Ton compte est actif. Tu peux commencer à suivre ton circuit DBSCG.',
-  'verified.cta': 'Continuer',
+  'verified.body': 'Ton compte est actif. Tu peux te connecter.',
+  'verified.cta': 'Aller à la connexion',
+  'verified.error.title': 'Lien invalide',
+  'verified.error.body': 'Ce lien de confirmation est invalide ou a expiré.',
+  'verified.error.cta': 'Retour à la connexion',
 
   // Signup CTA banner (public pages)
   'signupCta.body': 'Tu joues le circuit ? Crée ton compte pour suivre tes events, résultats et dépenses.',
@@ -468,10 +472,14 @@ const EN: Record<string, string> = {
   'reset.success.body': 'Redirecting…',
 
   // Verified screen (post email confirm)
+  'verified.loading': 'Confirming…',
   'verified.title': 'Account verified!',
   'verified.titleWithName': 'Welcome {username}!',
-  'verified.body': 'Your account is active. You can start tracking your DBSCG circuit.',
-  'verified.cta': 'Continue',
+  'verified.body': 'Your account is active. You can sign in.',
+  'verified.cta': 'Go to sign in',
+  'verified.error.title': 'Invalid link',
+  'verified.error.body': 'This confirmation link is invalid or has expired.',
+  'verified.error.cta': 'Back to sign in',
 
   // Signup CTA banner (public pages)
   'signupCta.body': 'Playing the circuit? Create your account to track events, results and expenses.',

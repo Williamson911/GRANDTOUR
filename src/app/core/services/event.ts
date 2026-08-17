@@ -1,13 +1,14 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { Event } from '../models/event';
-import { generateEventId } from '../utils/slug';
 import { RegistrationsService } from './registrations';
-import { supabase } from './supabase';
 
 export interface EventInput {
   name: string;
-  type: 'Regional' | 'Finals';
+  type: string;
   date: Date;
   city: string;
   country: string;
@@ -19,10 +20,41 @@ export interface EventInput {
 
 export type EventWriteResult = { ok: true } | { ok: false; message: string };
 
+interface EventTypeResponse {
+  id: number;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+interface AddressResponse {
+  city: string;
+  country: string;
+  venue: string;
+  lat: number;
+  lng: number;
+}
+
+interface EventIndexResponse {
+  id: string;
+  name: string;
+  type: EventTypeResponse;
+  date: string;
+  address: AddressResponse;
+  registerLink: string | null;
+  registered: boolean;
+}
+
+interface EventPage {
+  content: EventIndexResponse[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class EventService {
+  private readonly http = inject(HttpClient);
   private readonly registrations = inject(RegistrationsService);
   private readonly _raw = signal<Event[]>([]);
+  private readonly _eventTypes = signal<EventTypeResponse[]>([]);
   private loaded = false;
 
   readonly events = computed(() => {
@@ -33,13 +65,23 @@ export class EventService {
 
   async load(): Promise<void> {
     if (this.loaded) return;
-    const { data, error } = await supabase.from('events').select('*').order('date');
-    if (error) {
+    try {
+      const [page, types] = await Promise.all([
+        firstValueFrom(
+          this.http.get<EventPage>(`${environment.apiUrl}/event`, {
+            params: { size: '1000', sort: 'date' },
+          }),
+        ),
+        firstValueFrom(
+          this.http.get<EventTypeResponse[]>(`${environment.apiUrl}/event-type`),
+        ),
+      ]);
+      this._eventTypes.set(types);
+      this._raw.set(page.content.map(hydrate).sort(byDate));
+      this.loaded = true;
+    } catch (error) {
       console.error('events load failed', error);
-      return;
     }
-    this._raw.set((data as EventRow[]).map(hydrate));
-    this.loaded = true;
   }
 
   byId(id: string): Event | undefined {
@@ -51,95 +93,99 @@ export class EventService {
   }
 
   async createEvent(input: EventInput): Promise<EventWriteResult> {
-    const existingIds = new Set(this._raw().map((e) => e.id));
-    const id = generateEventId(input.name, input.city, input.date, existingIds);
-    const { data, error } = await supabase
-      .from('events')
-      .insert(dehydrate(id, input))
-      .select()
-      .single();
-    if (error) {
-      console.error('createEvent failed', error);
-      return { ok: false, message: error.message };
+    const eventTypeId = this.eventTypeId(input.type);
+    if (eventTypeId === undefined) {
+      return { ok: false, message: `Unknown event type "${input.type}"` };
     }
-    const created = hydrate(data as EventRow);
-    this._raw.update((rows) => [...rows, created].sort(byDate));
-    return { ok: true };
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/event`, dehydrate(eventTypeId, input)),
+      );
+      await this.reload();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: this.errorMessage(err) };
+    }
   }
 
   async updateEvent(id: string, input: EventInput): Promise<EventWriteResult> {
-    const { data, error } = await supabase
-      .from('events')
-      .update(dehydrate(id, input))
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) {
-      console.error('updateEvent failed', error);
-      return { ok: false, message: error.message };
+    const eventTypeId = this.eventTypeId(input.type);
+    if (eventTypeId === undefined) {
+      return { ok: false, message: `Unknown event type "${input.type}"` };
     }
-    const updated = hydrate(data as EventRow);
-    this._raw.update((rows) => rows.map((e) => (e.id === id ? updated : e)).sort(byDate));
-    return { ok: true };
+    try {
+      await firstValueFrom(
+        this.http.put(
+          `${environment.apiUrl}/event/${id}`,
+          dehydrate(eventTypeId, input),
+        ),
+      );
+      await this.reload();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: this.errorMessage(err) };
+    }
   }
 
   async deleteEvent(id: string): Promise<EventWriteResult> {
-    const { error } = await supabase.from('events').delete().eq('id', id);
-    if (error) {
-      console.error('deleteEvent failed', error);
-      return { ok: false, message: error.message };
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/event/${id}`));
+      this._raw.update((rows) => rows.filter((e) => e.id !== id));
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: this.errorMessage(err) };
     }
-    this._raw.update((rows) => rows.filter((e) => e.id !== id));
-    return { ok: true };
   }
-}
 
-interface EventRow {
-  id: string;
-  name: string;
-  type: 'Regional' | 'Finals';
-  date: string;
-  city: string;
-  country: string;
-  venue: string;
-  lat: number;
-  lng: number;
-  register_link: string | null;
+  private eventTypeId(typeName: string): number | undefined {
+    return this._eventTypes().find((t) => t.name === typeName)?.id;
+  }
+
+  private async reload(): Promise<void> {
+    this.loaded = false;
+    await this.load();
+  }
+
+  private errorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      return String(err.error?.error ?? 'Request failed');
+    }
+    return 'Request failed';
+  }
 }
 
 function byDate(a: Event, b: Event): number {
   return a.date.getTime() - b.date.getTime();
 }
 
-export function hydrate(raw: EventRow): Event {
+export function hydrate(raw: EventIndexResponse): Event {
   return {
     id: raw.id,
     name: raw.name,
-    type: raw.type,
+    type: raw.type.name,
     date: new Date(raw.date),
     location: {
-      city: raw.city,
-      country: raw.country,
-      venue: raw.venue,
-      lat: raw.lat,
-      lng: raw.lng,
+      city: raw.address.city,
+      country: raw.address.country,
+      venue: raw.address.venue,
+      lat: raw.address.lat,
+      lng: raw.address.lng,
     },
-    registerLink: raw.register_link ?? undefined,
-    registered: false,
+    registerLink: raw.registerLink ?? undefined,
+    registered: raw.registered,
   };
 }
 
-export function dehydrate(id: string, input: EventInput) {
+export function dehydrate(eventTypeId: number, input: EventInput) {
   return {
-    id,
     name: input.name,
-    type: input.type,
+    eventTypeId,
     date: input.date.toISOString().slice(0, 10),
     city: input.city,
     country: input.country,
     venue: input.venue,
     lat: input.lat,
     lng: input.lng,
-    register_link: input.registerLink || null,
+    registerLink: input.registerLink || null,
   };
 }

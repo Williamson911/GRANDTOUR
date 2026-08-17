@@ -1,51 +1,55 @@
+import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { Match } from '../models/match';
 import { PlayerResult } from '../models/player-result';
 import { AuthService } from './auth';
-import { supabase } from './supabase';
 
-interface PlayerResultRow {
+interface ResultsResponse {
   id: string;
-  event_id: string;
-  deck_name: string;
-  leader_played: string;
+  userId: string;
+  eventId: string;
+  deckName: string;
+  leaderPlayed: string;
   placement: number;
-  total_players: number;
+  totalPlayers: number;
   prizes: number;
   notes: string | null;
   matches: Match[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-type ResultMap = Record<string, PlayerResultRow>;
+type ResultMap = Record<string, ResultsResponse>;
 
-function toResult(row: PlayerResultRow, eventId: string): PlayerResult {
+function toResult(row: ResultsResponse): PlayerResult {
   return {
     id: row.id,
-    eventId,
-    deckName: row.deck_name,
-    leaderPlayed: row.leader_played,
+    eventId: row.eventId,
+    deckName: row.deckName,
+    leaderPlayed: row.leaderPlayed,
     placement: row.placement,
-    totalPlayers: row.total_players,
+    totalPlayers: row.totalPlayers,
     prizes: row.prizes,
     ...(row.notes ? { notes: row.notes } : {}),
     matches: row.matches ?? [],
-    createdAt: new Date(row.created_at).getTime(),
-    updatedAt: new Date(row.updated_at).getTime(),
+    createdAt: new Date(row.createdAt).getTime(),
+    updatedAt: new Date(row.updatedAt).getTime(),
   };
 }
 
 @Injectable({ providedIn: 'root' })
 export class SeasonService {
+  private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly _results = signal<ResultMap>({});
 
   readonly results = computed<Record<string, PlayerResult>>(() => {
     const out: Record<string, PlayerResult> = {};
     for (const [eventId, row] of Object.entries(this._results())) {
-      out[eventId] = toResult(row, eventId);
+      out[eventId] = toResult(row);
     }
     return out;
   });
@@ -60,26 +64,27 @@ export class SeasonService {
         this._results.set({});
         return;
       }
-      const { data, error } = await supabase
-        .from('results')
-        .select(
-          'id, event_id, deck_name, leader_played, placement, total_players, prizes, notes, matches, created_at, updated_at',
-        );
-      if (error) {
-        console.error('results load failed', error);
-        this._results.set({});
-        return;
-      }
-      const rows = (data ?? []) as PlayerResultRow[];
-      const map: ResultMap = {};
-      for (const r of rows) map[r.event_id] = r;
-      this._results.set(map);
+      await this.reload();
     });
+  }
+
+  private async reload(): Promise<void> {
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<ResultsResponse[]>(`${environment.apiUrl}/results/me`),
+      );
+      const map: ResultMap = {};
+      for (const r of rows) map[r.eventId] = r;
+      this._results.set(map);
+    } catch (error) {
+      console.error('results load failed', error);
+      this._results.set({});
+    }
   }
 
   forEvent(eventId: string): PlayerResult | undefined {
     const row = this._results()[eventId];
-    return row ? toResult(row, eventId) : undefined;
+    return row ? toResult(row) : undefined;
   }
 
   async upsertResult(
@@ -93,80 +98,41 @@ export class SeasonService {
       notes?: string;
     },
   ): Promise<void> {
-    const userId = this.auth.currentUserId();
-    if (!userId) return;
-    const current = this._results()[eventId];
-    const nowIso = new Date().toISOString();
-
-    if (current) {
-      const updatedRow: PlayerResultRow = {
-        ...current,
-        deck_name: patch.deckName,
-        leader_played: patch.leaderPlayed,
-        placement: patch.placement,
-        total_players: patch.totalPlayers,
-        prizes: patch.prizes,
-        notes: patch.notes ?? null,
-        updated_at: nowIso,
-      };
-      this._results.update((map) => ({ ...map, [eventId]: updatedRow }));
-      const { error } = await supabase
-        .from('results')
-        .update({
-          deck_name: patch.deckName,
-          leader_played: patch.leaderPlayed,
+    if (!this.auth.currentUserId()) return;
+    const matches = this._results()[eventId]?.matches ?? [];
+    try {
+      await firstValueFrom(
+        this.http.put(`${environment.apiUrl}/results/${eventId}`, {
+          deckName: patch.deckName,
+          leaderPlayed: patch.leaderPlayed,
           placement: patch.placement,
-          total_players: patch.totalPlayers,
+          totalPlayers: patch.totalPlayers,
           prizes: patch.prizes,
           notes: patch.notes ?? null,
-          updated_at: nowIso,
-        })
-        .eq('id', current.id);
-      if (error) console.error('result update failed', error);
-    } else {
-      const { data, error } = await supabase
-        .from('results')
-        .insert({
-          user_id: userId,
-          event_id: eventId,
-          deck_name: patch.deckName,
-          leader_played: patch.leaderPlayed,
-          placement: patch.placement,
-          total_players: patch.totalPlayers,
-          prizes: patch.prizes,
-          notes: patch.notes ?? null,
-          matches: [],
-        })
-        .select(
-          'id, event_id, deck_name, leader_played, placement, total_players, prizes, notes, matches, created_at, updated_at',
-        )
-        .single();
-      if (error) {
-        console.error('result create failed', error);
-        return;
-      }
-      this._results.update((map) => ({
-        ...map,
-        [eventId]: data as PlayerResultRow,
-      }));
+          matches,
+        }),
+      );
+      await this.reload();
+    } catch (error) {
+      console.error('result upsert failed', error);
     }
   }
 
   async deleteResult(eventId: string): Promise<void> {
-    const userId = this.auth.currentUserId();
-    if (!userId) return;
-    const current = this._results()[eventId];
-    if (!current) return;
+    if (!this.auth.currentUserId()) return;
+    if (!this._results()[eventId]) return;
     this._results.update((map) => {
       const next = { ...map };
       delete next[eventId];
       return next;
     });
-    const { error } = await supabase
-      .from('results')
-      .delete()
-      .eq('id', current.id);
-    if (error) console.error('result delete failed', error);
+    try {
+      await firstValueFrom(
+        this.http.delete(`${environment.apiUrl}/results/${eventId}`),
+      );
+    } catch (error) {
+      console.error('result delete failed', error);
+    }
   }
 
   async addMatch(
@@ -178,8 +144,7 @@ export class SeasonService {
       notes?: string;
     },
   ): Promise<void> {
-    const userId = this.auth.currentUserId();
-    if (!userId) return;
+    if (!this.auth.currentUserId()) return;
     const current = this._results()[eventId];
     if (!current) return;
     const round = (current.matches ?? []).length + 1;
@@ -191,39 +156,46 @@ export class SeasonService {
       ...(input.notes ? { notes: input.notes } : {}),
     };
     const nextMatches = [...(current.matches ?? []), match];
-    const nowIso = new Date().toISOString();
-    const next: PlayerResultRow = {
-      ...current,
-      matches: nextMatches,
-      updated_at: nowIso,
-    };
-    this._results.update((map) => ({ ...map, [eventId]: next }));
-    const { error } = await supabase
-      .from('results')
-      .update({ matches: nextMatches, updated_at: nowIso })
-      .eq('id', current.id);
-    if (error) console.error('match add failed', error);
+    try {
+      await firstValueFrom(
+        this.http.put(`${environment.apiUrl}/results/${eventId}`, {
+          deckName: current.deckName,
+          leaderPlayed: current.leaderPlayed,
+          placement: current.placement,
+          totalPlayers: current.totalPlayers,
+          prizes: current.prizes,
+          notes: current.notes,
+          matches: nextMatches,
+        }),
+      );
+      await this.reload();
+    } catch (error) {
+      console.error('match add failed', error);
+    }
   }
 
   async deleteMatch(eventId: string, round: number): Promise<void> {
-    const userId = this.auth.currentUserId();
-    if (!userId) return;
+    if (!this.auth.currentUserId()) return;
     const current = this._results()[eventId];
     if (!current) return;
     const nextMatches = (current.matches ?? [])
       .filter((m) => m.round !== round)
       .map((m, idx) => ({ ...m, round: idx + 1 }));
-    const nowIso = new Date().toISOString();
-    const next: PlayerResultRow = {
-      ...current,
-      matches: nextMatches,
-      updated_at: nowIso,
-    };
-    this._results.update((map) => ({ ...map, [eventId]: next }));
-    const { error } = await supabase
-      .from('results')
-      .update({ matches: nextMatches, updated_at: nowIso })
-      .eq('id', current.id);
-    if (error) console.error('match delete failed', error);
+    try {
+      await firstValueFrom(
+        this.http.put(`${environment.apiUrl}/results/${eventId}`, {
+          deckName: current.deckName,
+          leaderPlayed: current.leaderPlayed,
+          placement: current.placement,
+          totalPlayers: current.totalPlayers,
+          prizes: current.prizes,
+          notes: current.notes,
+          matches: nextMatches,
+        }),
+      );
+      await this.reload();
+    } catch (error) {
+      console.error('match delete failed', error);
+    }
   }
 }

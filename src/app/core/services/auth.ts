@@ -1,13 +1,14 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
-import type { Session as SupabaseSession } from '@supabase/supabase-js';
+import { firstValueFrom } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { PublicUser, Session } from '../models/user';
-import { I18nService } from './i18n';
-import { supabase } from './supabase';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]+$/;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const BANDAI_RE = /^[0-9]{8,12}$/;
+const TOKEN_KEY = 'gt_token';
 
 export type RegisterResult =
   | { ok: true; awaitingConfirmation: true; email: string }
@@ -30,70 +31,105 @@ export type UpdateProfileResult =
       reason: 'not-authenticated' | 'username-taken' | 'email-taken' | 'invalid-fields';
     };
 
-interface ProfileRow {
+interface JwtClaims {
+  sub: string;
+  id: string;
+  email: string;
+  roles: string[];
+  iat: number;
+  exp: number;
+}
+
+interface MeResponse {
   id: string;
   username: string;
-  bandai_tcg_id: string | null;
-  is_admin: boolean;
-  created_at: string;
+  email: string;
+  bandaiTcgId: string | null;
+  createdAt: string;
+}
+
+interface ProfileOverride {
+  username: string;
+  email: string;
+  bandaiTcgId?: string;
+  createdAt: string;
+}
+
+function decodeJwt(token: string): JwtClaims | null {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes)) as JwtClaims;
+  } catch {
+    return null;
+  }
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly i18n = inject(I18nService);
-  private readonly _session = signal<Session | null>(null);
-  private readonly _profile = signal<ProfileRow | null>(null);
-  private readonly _ready = signal(false);
-
-  readonly session: Signal<Session | null> = this._session.asReadonly();
-  readonly ready: Signal<boolean> = this._ready.asReadonly();
-  readonly currentUserId: Signal<string | null> = computed(
-    () => this._session()?.userId ?? null,
+  private readonly http = inject(HttpClient);
+  private readonly _token = signal<string | null>(
+    typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null,
   );
+  private readonly _profileOverride = signal<ProfileOverride | null>(null);
+
+  readonly token: Signal<string | null> = this._token.asReadonly();
+
+  private readonly claims: Signal<JwtClaims | null> = computed(() => {
+    const token = this._token();
+    if (!token) return null;
+    const decoded = decodeJwt(token);
+    if (!decoded || decoded.exp * 1000 <= Date.now()) return null;
+    return decoded;
+  });
+
+  readonly session: Signal<Session | null> = computed(() => {
+    const c = this.claims();
+    if (!c) return null;
+    return { userId: c.id, username: c.sub, email: c.email, roles: c.roles };
+  });
+
+  readonly currentUserId: Signal<string | null> = computed(
+    () => this.session()?.userId ?? null,
+  );
+
   readonly currentUser: Signal<PublicUser | null> = computed(() => {
-    const s = this._session();
-    const p = this._profile();
-    if (!s || !p) return null;
+    const s = this.session();
+    if (!s) return null;
+    const override = this._profileOverride();
     return {
-      id: p.id,
-      username: p.username,
-      email: s.email,
-      bandaiTcgId: p.bandai_tcg_id ?? undefined,
-      createdAt: p.created_at,
+      id: s.userId,
+      username: override?.username ?? s.username,
+      email: override?.email ?? s.email,
+      bandaiTcgId: override?.bandaiTcgId,
+      createdAt: override?.createdAt,
     };
   });
+
   readonly isAdmin: Signal<boolean> = computed(
-    () => this._profile()?.is_admin ?? false,
+    () => this.session()?.roles.includes('ROLE_ADMIN') ?? false,
   );
 
   constructor() {
-    // Bootstrap from any existing session, then subscribe.
-    void supabase.auth.getSession().then(({ data }) => {
-      this.applySession(data.session);
-      this._ready.set(true);
-    });
-    supabase.auth.onAuthStateChange((_event, session) => {
-      this.applySession(session);
-    });
-
-    // Whenever the user id changes, reload the profile.
     effect(async () => {
       const userId = this.currentUserId();
       if (!userId) {
-        this._profile.set(null);
+        this._profileOverride.set(null);
         return;
       }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, bandai_tcg_id, is_admin, created_at')
-        .eq('id', userId)
-        .maybeSingle();
-      if (error) {
-        console.error('profile load failed', error);
-        this._profile.set(null);
-        return;
+      try {
+        const me = await firstValueFrom(
+          this.http.get<MeResponse>(`${environment.apiUrl}/me`),
+        );
+        this._profileOverride.set({
+          username: me.username,
+          email: me.email,
+          bandaiTcgId: me.bandaiTcgId ?? undefined,
+          createdAt: me.createdAt,
+        });
+      } catch {
+        this._profileOverride.set(null);
       }
-      this._profile.set(data as ProfileRow | null);
     });
   }
 
@@ -119,44 +155,29 @@ export class AuthService {
       return { ok: false, reason: 'invalid-fields' };
     }
 
-    // Pre-flight check: is the username already taken?
-    const { data: available, error: availError } = await supabase.rpc(
-      'username_available',
-      { check_username: username },
-    );
-    if (!availError && available === false) {
-      return { ok: false, reason: 'username-taken' };
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/verified?lang=${this.i18n.lang()}`,
-        data: {
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/auth/register`, {
           username,
-          ...(bandaiTcgId ? { bandai_tcg_id: bandaiTcgId } : {}),
-        },
-      },
-    });
-
-    if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes('already registered') || msg.includes('user already')) {
-        return { ok: false, reason: 'email-taken' };
-      }
-      if (
-        msg.includes('profiles_username_key') ||
-        msg.includes('database error saving new user')
-      ) {
-        // Fallback if pre-flight check missed it (race condition or transient).
-        return { ok: false, reason: 'username-taken' };
-      }
-      console.error('signup failed', error);
-      return { ok: false, reason: 'invalid-fields' };
+          email,
+          password,
+        }),
+      );
+      return { ok: true, awaitingConfirmation: true, email };
+    } catch (err) {
+      return { ok: false, reason: this.conflictReason(err) };
     }
+  }
 
-    return { ok: true, awaitingConfirmation: true, email };
+  private conflictReason(
+    err: unknown,
+  ): 'username-taken' | 'email-taken' | 'invalid-fields' {
+    if (err instanceof HttpErrorResponse && err.status === 409) {
+      const message = String(err.error?.error ?? '').toLowerCase();
+      if (message.includes('username')) return 'username-taken';
+      if (message.includes('email')) return 'email-taken';
+    }
+    return 'invalid-fields';
   }
 
   async login(input: {
@@ -167,52 +188,72 @@ export class AuthService {
     if (!email || !input.password) {
       return { ok: false, reason: 'invalid-credentials' };
     }
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: input.password,
-    });
-    if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes('email not confirmed')) {
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{ token: string }>(`${environment.apiUrl}/auth/login`, {
+          email,
+          password: input.password,
+        }),
+      );
+      this.setToken(response.token);
+      return { ok: true };
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 403) {
         return { ok: false, reason: 'email-not-confirmed' };
       }
       return { ok: false, reason: 'invalid-credentials' };
     }
-    return { ok: true };
   }
 
   async resendConfirmation(email: string): Promise<{ ok: boolean }> {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/verified?lang=${this.i18n.lang()}`,
-      },
-    });
-    return { ok: !error };
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/auth/resend-confirmation`, {
+          email: email.trim(),
+        }),
+      );
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
   }
 
   async requestPasswordReset(email: string): Promise<ResetRequestResult> {
     // Always returns ok to avoid email enumeration.
-    await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/reset?lang=${this.i18n.lang()}`,
-    });
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/auth/forgot-password`, {
+          email: email.trim(),
+        }),
+      );
+    } catch {
+      // swallow — see comment above.
+    }
     return { ok: true };
   }
 
-  async applyNewPassword(newPassword: string): Promise<ApplyPasswordResult> {
+  async applyNewPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<ApplyPasswordResult> {
     if (newPassword.length < 8) {
       return { ok: false, reason: 'invalid-fields' };
     }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes('expired') || msg.includes('invalid')) {
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/auth/reset-password`, {
+          token,
+          newPassword,
+        }),
+      );
+      return { ok: true };
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 400) {
         return { ok: false, reason: 'invalid-token' };
       }
       return { ok: false, reason: 'invalid-fields' };
     }
-    return { ok: true };
   }
 
   async updateProfile(patch: {
@@ -220,16 +261,13 @@ export class AuthService {
     email?: string;
     bandaiTcgId?: string;
   }): Promise<UpdateProfileResult> {
-    const session = this._session();
-    const profile = this._profile();
-    if (!session || !profile) return { ok: false, reason: 'not-authenticated' };
+    const current = this.currentUser();
+    if (!current) return { ok: false, reason: 'not-authenticated' };
 
-    const username = (patch.username ?? profile.username).trim();
-    const email = (patch.email ?? session.email).trim();
+    const username = (patch.username ?? current.username).trim();
+    const email = (patch.email ?? current.email).trim();
     const bandaiRaw =
-      patch.bandaiTcgId !== undefined
-        ? patch.bandaiTcgId
-        : profile.bandai_tcg_id ?? '';
+      patch.bandaiTcgId !== undefined ? patch.bandaiTcgId : current.bandaiTcgId ?? '';
     const bandaiTcgId = bandaiRaw.replace(/[\s-]/g, '');
 
     if (
@@ -242,86 +280,59 @@ export class AuthService {
       return { ok: false, reason: 'invalid-fields' };
     }
 
-    // Update profile row (username + bandai)
-    const profileChanged =
-      username !== profile.username ||
-      (bandaiTcgId || null) !== (profile.bandai_tcg_id ?? null);
-    if (profileChanged) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+    try {
+      const response = await firstValueFrom(
+        this.http.put<MeResponse>(`${environment.apiUrl}/profile`, {
           username,
-          bandai_tcg_id: bandaiTcgId || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profile.id);
-      if (error) {
-        const msg = error.message.toLowerCase();
-        if (msg.includes('profiles_username_key')) {
-          return { ok: false, reason: 'username-taken' };
-        }
-        console.error('profile update failed', error);
-        return { ok: false, reason: 'invalid-fields' };
-      }
+          email,
+          bandaiTcgId: bandaiTcgId || null,
+        }),
+      );
+      this._profileOverride.set({
+        username: response.username,
+        email: response.email,
+        bandaiTcgId: response.bandaiTcgId ?? undefined,
+        createdAt: response.createdAt,
+      });
+      return {
+        ok: true,
+        user: {
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          bandaiTcgId: response.bandaiTcgId ?? undefined,
+          createdAt: response.createdAt,
+        },
+      };
+    } catch (err) {
+      const reason = this.conflictReason(err);
+      if (reason === 'invalid-fields') return { ok: false, reason: 'invalid-fields' };
+      return { ok: false, reason };
     }
-
-    // Update email separately via Supabase Auth
-    if (email !== session.email) {
-      const { error } = await supabase.auth.updateUser({ email });
-      if (error) {
-        const msg = error.message.toLowerCase();
-        if (msg.includes('already')) {
-          return { ok: false, reason: 'email-taken' };
-        }
-        console.error('email update failed', error);
-        return { ok: false, reason: 'invalid-fields' };
-      }
-    }
-
-    // Re-fetch profile to get fresh state
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, username, bandai_tcg_id, is_admin, created_at')
-      .eq('id', profile.id)
-      .maybeSingle();
-    if (data) this._profile.set(data as ProfileRow);
-
-    return {
-      ok: true,
-      user: {
-        id: profile.id,
-        username,
-        email,
-        bandaiTcgId: bandaiTcgId || undefined,
-        createdAt: profile.created_at,
-      },
-    };
   }
 
   async deleteAccount(): Promise<boolean> {
-    const session = this._session();
-    if (!session) return false;
-    const { error } = await supabase.rpc('delete_my_account');
-    if (error) {
-      console.error('delete account failed', error);
+    if (!this.session()) return false;
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/account`));
+      this.setToken(null);
+      return true;
+    } catch {
       return false;
     }
-    await supabase.auth.signOut();
-    return true;
   }
 
   async logout(): Promise<void> {
-    await supabase.auth.signOut();
+    this.setToken(null);
   }
 
-  private applySession(supaSession: SupabaseSession | null): void {
-    if (!supaSession?.user) {
-      this._session.set(null);
-      return;
+  private setToken(token: string | null): void {
+    this._token.set(token);
+    if (typeof localStorage === 'undefined') return;
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
     }
-    this._session.set({
-      userId: supaSession.user.id,
-      email: supaSession.user.email ?? '',
-    });
   }
 }

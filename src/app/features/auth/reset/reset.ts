@@ -37,11 +37,14 @@ export class Reset {
   protected readonly formError = signal('');
   protected readonly success = signal(false);
 
+  private readonly token: string;
+
   constructor() {
     const langParam = this.route.snapshot.queryParamMap.get('lang');
     if (langParam === 'fr' || langParam === 'en') {
       this.i18n.setLang(langParam);
     }
+    this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
   }
 
   protected readonly form: FormGroup = this.fb.group(
@@ -61,7 +64,10 @@ export class Reset {
 
     this.formError.set('');
     this.busy.set(true);
-    const result = await this.auth.applyNewPassword(this.form.value.newPassword);
+    const result = await this.auth.applyNewPassword(
+      this.token,
+      this.form.value.newPassword,
+    );
     this.busy.set(false);
 
     if (!result.ok) {

@@ -3,10 +3,12 @@ export interface PublicUser {
   username: string;
   email: string;
   bandaiTcgId?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface Session {
   userId: string;
+  username: string;
   email: string;
+  roles: string[];
 }

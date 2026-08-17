@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AdminEvents } from './admin-events';
@@ -9,6 +10,7 @@ describe('AdminEvents', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminEvents],
+      providers: [provideHttpClient()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AdminEvents);

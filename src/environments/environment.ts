@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
+  apiUrl: 'http://localhost:8080',
   // Supabase project (Settings → API).
   supabaseUrl: 'https://xpwnyqsfamsmetghojfo.supabase.co',
   supabaseAnonKey:

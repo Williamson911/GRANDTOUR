@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 
 import { dehydrate, EventService, hydrate } from './event';
@@ -6,7 +7,7 @@ describe('EventService', () => {
   let service: EventService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [provideHttpClient()] });
     service = TestBed.inject(EventService);
   });
 
@@ -20,20 +21,24 @@ describe('EventService', () => {
 });
 
 describe('hydrate', () => {
-  it('maps a flat Supabase row into the nested Event shape', () => {
+  it('maps a backend EventIndexResponse into the nested Event shape', () => {
     const event = hydrate({
-      id: 'test-event-2026-06',
+      id: 'test-event-id',
       name: 'Test Event',
-      type: 'Regional',
+      type: { id: 1, name: 'Regional', icon: '🏆', color: '#d4af37' },
       date: '2026-06-14',
-      city: 'Rungis',
-      country: 'France',
-      venue: 'Espace Jean Monnet',
-      lat: 48.7569,
-      lng: 2.3633,
-      register_link: 'https://example.com',
+      address: {
+        city: 'Rungis',
+        country: 'France',
+        venue: 'Espace Jean Monnet',
+        lat: 48.7569,
+        lng: 2.3633,
+      },
+      registerLink: 'https://example.com',
+      registered: true,
     });
 
+    expect(event.type).toBe('Regional');
     expect(event.location).toEqual({
       city: 'Rungis',
       country: 'France',
@@ -42,29 +47,26 @@ describe('hydrate', () => {
       lng: 2.3633,
     });
     expect(event.registerLink).toBe('https://example.com');
-    expect(event.registered).toBe(false);
+    expect(event.registered).toBe(true);
   });
 
-  it('maps a null register_link to undefined', () => {
+  it('maps a null registerLink to undefined', () => {
     const event = hydrate({
-      id: 'test-event-2026-06',
+      id: 'test-event-id',
       name: 'Test Event',
-      type: 'Finals',
+      type: { id: 2, name: 'Finals', icon: '🥇', color: '#c0392b' },
       date: '2026-06-14',
-      city: 'Rungis',
-      country: 'France',
-      venue: 'Venue',
-      lat: 0,
-      lng: 0,
-      register_link: null,
+      address: { city: 'Rungis', country: 'France', venue: 'Venue', lat: 0, lng: 0 },
+      registerLink: null,
+      registered: false,
     });
     expect(event.registerLink).toBeUndefined();
   });
 });
 
 describe('dehydrate', () => {
-  it('flattens an EventInput into a Supabase row payload', () => {
-    const row = dehydrate('test-id', {
+  it('flattens an EventInput into a backend EventRequest payload', () => {
+    const row = dehydrate(1, {
       name: 'Test Event',
       type: 'Regional',
       date: new Date('2026-06-14'),
@@ -77,21 +79,20 @@ describe('dehydrate', () => {
     });
 
     expect(row).toEqual({
-      id: 'test-id',
       name: 'Test Event',
-      type: 'Regional',
+      eventTypeId: 1,
       date: '2026-06-14',
       city: 'Rungis',
       country: 'France',
       venue: 'Espace Jean Monnet',
       lat: 48.7569,
       lng: 2.3633,
-      register_link: 'https://example.com',
+      registerLink: 'https://example.com',
     });
   });
 
   it('stores a missing registerLink as null', () => {
-    const row = dehydrate('test-id', {
+    const row = dehydrate(2, {
       name: 'Test Event',
       type: 'Finals',
       date: new Date('2026-06-14'),
@@ -101,6 +102,6 @@ describe('dehydrate', () => {
       lat: 0,
       lng: 0,
     });
-    expect(row.register_link).toBeNull();
+    expect(row.registerLink).toBeNull();
   });
 });

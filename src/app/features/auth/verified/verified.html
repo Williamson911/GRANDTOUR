@@ -1,16 +1,34 @@
 <section class="auth" [attr.data-lang]="lang()">
-  <div class="auth__card auth__card--success">
-    <div class="auth__check" aria-hidden="true">✓</div>
-    <h1 class="auth__title">
-      @if (username()) {
-        {{ i18n.t('verified.titleWithName', { username: username() }) }}
-      } @else {
-        {{ i18n.t('verified.title') }}
-      }
-    </h1>
-    <p class="auth__subtitle">{{ i18n.t('verified.body') }}</p>
-    <button type="button" class="auth__submit" (click)="continue()">
-      {{ i18n.t('verified.cta') }}
-    </button>
-  </div>
+  @switch (status()) {
+    @case ('loading') {
+      <div class="auth__card auth__card--success">
+        <p class="auth__subtitle">{{ i18n.t('verified.loading') }}</p>
+      </div>
+    }
+    @case ('success') {
+      <div class="auth__card auth__card--success">
+        <div class="auth__check" aria-hidden="true">✓</div>
+        <h1 class="auth__title">
+          @if (username()) {
+            {{ i18n.t('verified.titleWithName', { username: username() }) }}
+          } @else {
+            {{ i18n.t('verified.title') }}
+          }
+        </h1>
+        <p class="auth__subtitle">{{ i18n.t('verified.body') }}</p>
+        <button type="button" class="auth__submit" (click)="continue()">
+          {{ i18n.t('verified.cta') }}
+        </button>
+      </div>
+    }
+    @case ('error') {
+      <div class="auth__card auth__card--success">
+        <h1 class="auth__title">{{ i18n.t('verified.error.title') }}</h1>
+        <p class="auth__subtitle">{{ i18n.t('verified.error.body') }}</p>
+        <button type="button" class="auth__submit" (click)="continue()">
+          {{ i18n.t('verified.error.cta') }}
+        </button>
+      </div>
+    }
+  }
 </section>

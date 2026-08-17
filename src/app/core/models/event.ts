@@ -1,7 +1,7 @@
 export interface Event {
   id : string;
   name: string;
-  type: 'Regional' | 'Finals';
+  type: string;
   date: Date;
   location: {
     city: string;
