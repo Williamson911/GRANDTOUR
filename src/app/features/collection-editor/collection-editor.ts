@@ -9,7 +9,13 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
-import { CardPrinting, CollectionDraft, CollectionItem, printingKey } from '../../core/models/collection';
+import {
+  CardLanguage,
+  CardPrinting,
+  CollectionDraft,
+  CollectionItem,
+  printingKey,
+} from '../../core/models/collection';
 import { CollectionsService } from '../../core/services/collections';
 import { I18nService } from '../../core/services/i18n';
 import { CardDetailPanel } from '../../shared/components/card-detail-panel/card-detail-panel';
@@ -93,13 +99,18 @@ export class CollectionEditor {
     this.selectedPrinting.set(null);
   }
 
-  addOrUpdateItem(values: { quantity: number; price: number }): void {
+  addOrUpdateItem(values: { quantity: number; price: number; language: CardLanguage | null }): void {
     const printing = this.selectedPrinting();
     if (!printing) return;
     const key = printingKey(printing);
     this.draft.update((d) => {
       const index = d.items.findIndex((item) => printingKey(item.card) === key);
-      const newItem: CollectionItem = { quantity: values.quantity, price: values.price, card: printing };
+      const newItem: CollectionItem = {
+        quantity: values.quantity,
+        price: values.price,
+        language: values.language,
+        card: printing,
+      };
       const items =
         index === -1
           ? [...d.items, newItem]

@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 
 import { CollectionSummary } from '../../core/models/collection';
+import { cardImageUrl } from '../../core/services/cards';
 import { CollectionsService } from '../../core/services/collections';
 import { CollectionList } from './collection-list';
 
@@ -13,7 +14,7 @@ describe('CollectionList', () => {
 
   beforeEach(async () => {
     list = vi.fn().mockResolvedValue([
-      { id: 'col-1', name: 'Ma collection', cardCount: 12, totalPrice: 84.5 },
+      { id: 'col-1', name: 'Ma collection', cardCount: 12, totalPrice: 84.5, thumbnailImgLink: null },
     ] satisfies CollectionSummary[]);
 
     await TestBed.configureTestingModule({
@@ -34,8 +35,41 @@ describe('CollectionList', () => {
   it('loads collections on init', () => {
     expect(list).toHaveBeenCalled();
     expect(component.items()).toEqual([
-      { id: 'col-1', name: 'Ma collection', cardCount: 12, totalPrice: 84.5 },
+      { id: 'col-1', name: 'Ma collection', cardCount: 12, totalPrice: 84.5, thumbnailImgLink: null },
     ]);
+  });
+
+  it('does not render a thumbnail image when thumbnailImgLink is null', () => {
+    const img = (fixture.nativeElement as HTMLElement).querySelector('.collection-tile__thumb');
+    expect(img).toBeNull();
+  });
+
+  it('renders a thumbnail image built via cardImageUrl when thumbnailImgLink is set', async () => {
+    const listWithThumb = vi.fn().mockResolvedValue([
+      {
+        id: 'col-2',
+        name: 'Autre collection',
+        cardCount: 3,
+        totalPrice: 20,
+        thumbnailImgLink: 'BT18-030',
+      },
+    ] satisfies CollectionSummary[]);
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [CollectionList],
+      providers: [provideRouter([]), { provide: CollectionsService, useValue: { list: listWithThumb } }],
+    }).compileComponents();
+
+    const thumbFixture = TestBed.createComponent(CollectionList);
+    thumbFixture.detectChanges();
+    await thumbFixture.whenStable();
+    thumbFixture.detectChanges();
+
+    const img = (thumbFixture.nativeElement as HTMLElement).querySelector<HTMLImageElement>(
+      '.collection-tile__thumb',
+    );
+    expect(img).not.toBeNull();
+    expect(img?.getAttribute('src')).toBe(cardImageUrl('BT18-030'));
   });
 
   it('shows the empty-state message when there are no collections', async () => {

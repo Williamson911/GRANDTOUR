@@ -3,13 +3,19 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CardPrinting, CollectionDraft, CollectionItem, CollectionSummary } from '../models/collection';
+import {
+  CardPrinting,
+  CollectionDraft,
+  CollectionItem,
+  CollectionSummary,
+} from '../models/collection';
 
 interface CollectionItemResponse {
   cardId: string;
   variantId: string | null;
   quantity: number;
   price: number;
+  language: string | null;
   card: CardPrinting;
 }
 
@@ -24,12 +30,18 @@ interface CollectionSummaryResponse {
   name: string;
   cardCount: number;
   totalPrice: number;
+  thumbnailImgLink: string | null;
 }
 
 export type CollectionWriteResult = { ok: true } | { ok: false; message: string };
 
 export function toCollectionItem(row: CollectionItemResponse): CollectionItem {
-  return { quantity: row.quantity, price: row.price, card: row.card };
+  return {
+    quantity: row.quantity,
+    price: row.price,
+    language: row.language === 'FR' || row.language === 'EN' ? row.language : null,
+    card: row.card,
+  };
 }
 
 export function toCollectionDraft(row: CollectionResponse): CollectionDraft {
@@ -44,6 +56,7 @@ export function dehydrate(draft: CollectionDraft) {
       variantId: item.card.variantId,
       quantity: item.quantity,
       price: item.price,
+      language: item.language,
     })),
   };
 }

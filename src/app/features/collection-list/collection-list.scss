@@ -35,6 +35,13 @@
   }
 }
 
+.collection-tile__thumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
 .collection-tile__name {
   font-weight: 600;
 }

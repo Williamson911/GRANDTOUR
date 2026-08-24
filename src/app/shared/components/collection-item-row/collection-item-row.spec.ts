@@ -70,4 +70,18 @@ describe('CollectionItemRow', () => {
 
     expect(spy).toHaveBeenCalled();
   });
+
+  it('does not render a language badge by default', () => {
+    const badge = fixture.nativeElement.querySelector('.item-row__lang');
+    expect(badge).toBeNull();
+  });
+
+  it('renders a language badge with the language text when language is set', () => {
+    fixture.componentRef.setInput('language', 'FR');
+    fixture.detectChanges();
+
+    const badge = fixture.nativeElement.querySelector('.item-row__lang');
+    expect(badge).not.toBeNull();
+    expect(badge.textContent.trim()).toBe('FR');
+  });
 });

@@ -11,16 +11,25 @@
         <option [value]="t">{{ t }}</option>
       }
     </select>
-    <input
-      type="text"
-      [placeholder]="i18n.t('cardGrid.allColors')"
-      (input)="onColorInput($any($event.target).value)"
-    />
-    <input
-      type="text"
-      [placeholder]="i18n.t('cardGrid.allSeries')"
-      (input)="onSeriesInput($any($event.target).value)"
-    />
+    <select (change)="onColorChange($any($event.target).value)">
+      <option value="">{{ i18n.t('cardGrid.allColors') }}</option>
+      @for (c of colorOptions(); track c) {
+        <option [value]="c">{{ c }}</option>
+      }
+    </select>
+    @if (color(); as selectedColor) {
+      <span
+        class="card-grid__color-swatch"
+        [style.background]="colorSwatch(selectedColor)"
+        [attr.aria-label]="selectedColor"
+      ></span>
+    }
+    <select (change)="onSeriesChange($any($event.target).value)">
+      <option value="">{{ i18n.t('cardGrid.allSeries') }}</option>
+      @for (s of seriesOptions(); track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
   </div>
 
   @if (results().length === 0) {

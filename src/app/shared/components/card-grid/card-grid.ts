@@ -37,6 +37,8 @@ export class CardGrid {
   protected readonly type = signal('');
   protected readonly color = signal('');
   protected readonly series = signal('');
+  readonly colorOptions = signal<string[]>([]);
+  readonly seriesOptions = signal<string[]>([]);
   readonly results = signal<CardPrinting[]>([]);
   readonly totalPages = signal(0);
 
@@ -55,6 +57,11 @@ export class CardGrid {
     // Bypass the debounce for the initial load — it exists to smooth out rapid
     // filter typing, not to delay the very first render of an empty-filter grid.
     void this.fetchPrintings().then((page) => this.applyPage(page));
+
+    void this.cards.getFacets().then((facets) => {
+      this.colorOptions.set(facets.colors);
+      this.seriesOptions.set(facets.series);
+    });
   }
 
   private fetchPrintings(): Promise<PrintingsPage> {
@@ -85,13 +92,13 @@ export class CardGrid {
     this.refresh.next();
   }
 
-  onColorInput(value: string): void {
+  onColorChange(value: string): void {
     this.color.set(value);
     this.page.set(0);
     this.refresh.next();
   }
 
-  onSeriesInput(value: string): void {
+  onSeriesChange(value: string): void {
     this.series.set(value);
     this.page.set(0);
     this.refresh.next();
@@ -119,5 +126,24 @@ export class CardGrid {
 
   protected trackByPrinting(_index: number, printing: CardPrinting): string {
     return printingKey(printing);
+  }
+
+  protected colorSwatch(color: string): string {
+    const hex: Record<string, string> = {
+      Red: '#dc2626',
+      Blue: '#2563eb',
+      Green: '#16a34a',
+      Yellow: '#eab308',
+      Black: '#27272a',
+      White: '#f4f4f5',
+      Colorless: '#a1a1aa',
+    };
+    if (color.includes('/')) {
+      const [a, b] = color.split('/');
+      const colorA = hex[a] ?? '#a1a1aa';
+      const colorB = hex[b] ?? '#a1a1aa';
+      return `linear-gradient(135deg, ${colorA} 50%, ${colorB} 50%)`;
+    }
+    return hex[color] ?? '#a1a1aa';
   }
 }

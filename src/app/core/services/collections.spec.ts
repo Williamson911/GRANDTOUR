@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 
 import { CardPrinting } from '../models/collection';
-import { CollectionsService, dehydrate, toCollectionDraft } from './collections';
+import { CollectionsService, dehydrate, toCollectionDraft, toCollectionItem } from './collections';
 
 const PRINTING: CardPrinting = {
   cardId: 'card-1',
@@ -36,15 +36,56 @@ describe('toCollectionDraft', () => {
       id: 'col-1',
       name: 'Ma collection',
       items: [
-        { cardId: 'card-1', variantId: null, quantity: 3, price: 12.5, card: PRINTING },
+        { cardId: 'card-1', variantId: null, quantity: 3, price: 12.5, language: 'FR', card: PRINTING },
       ],
     });
 
     expect(draft).toEqual({
       id: 'col-1',
       name: 'Ma collection',
-      items: [{ quantity: 3, price: 12.5, card: PRINTING }],
+      items: [{ quantity: 3, price: 12.5, language: 'FR', card: PRINTING }],
     });
+  });
+});
+
+describe('toCollectionItem', () => {
+  it('narrows an unrecognized/absent wire language value to null', () => {
+    const item = toCollectionItem({
+      cardId: 'card-1',
+      variantId: null,
+      quantity: 1,
+      price: 1,
+      language: null,
+      card: PRINTING,
+    });
+
+    expect(item.language).toBeNull();
+  });
+
+  it('narrows an invalid wire language value defensively to null', () => {
+    const item = toCollectionItem({
+      cardId: 'card-1',
+      variantId: null,
+      quantity: 1,
+      price: 1,
+      language: 'DE' as unknown as string,
+      card: PRINTING,
+    });
+
+    expect(item.language).toBeNull();
+  });
+
+  it('passes through valid FR/EN wire language values', () => {
+    expect(
+      toCollectionItem({
+        cardId: 'card-1',
+        variantId: null,
+        quantity: 1,
+        price: 1,
+        language: 'EN',
+        card: PRINTING,
+      }).language,
+    ).toBe('EN');
   });
 });
 
@@ -53,12 +94,12 @@ describe('dehydrate', () => {
     const body = dehydrate({
       id: 'col-1',
       name: 'Ma collection',
-      items: [{ quantity: 3, price: 12.5, card: PRINTING }],
+      items: [{ quantity: 3, price: 12.5, language: 'FR', card: PRINTING }],
     });
 
     expect(body).toEqual({
       name: 'Ma collection',
-      items: [{ cardId: 'card-1', variantId: null, quantity: 3, price: 12.5 }],
+      items: [{ cardId: 'card-1', variantId: null, quantity: 3, price: 12.5, language: 'FR' }],
     });
   });
 });

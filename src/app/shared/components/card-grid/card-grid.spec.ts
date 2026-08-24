@@ -26,6 +26,7 @@ describe('CardGrid', () => {
   let fixture: ComponentFixture<CardGrid>;
   let component: CardGrid;
   let searchPrintings: ReturnType<typeof vi.fn>;
+  let getFacets: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     searchPrintings = vi.fn().mockResolvedValue({
@@ -33,10 +34,11 @@ describe('CardGrid', () => {
       totalElements: 1,
       totalPages: 1,
     } satisfies PrintingsPage);
+    getFacets = vi.fn().mockResolvedValue({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'] });
 
     await TestBed.configureTestingModule({
       imports: [CardGrid],
-      providers: [{ provide: CardsService, useValue: { searchPrintings } }],
+      providers: [{ provide: CardsService, useValue: { searchPrintings, getFacets } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CardGrid);
@@ -88,5 +90,65 @@ describe('CardGrid', () => {
     component.select(GOKU);
 
     expect(spy).toHaveBeenCalledWith(GOKU);
+  });
+
+  it('loads color and series facets on init', async () => {
+    await wait(400);
+    expect(getFacets).toHaveBeenCalled();
+    expect(component.colorOptions()).toEqual(['Red', 'Blue']);
+    expect(component.seriesOptions()).toEqual(['BT1', 'BT2']);
+  });
+
+  it('onColorChange sets the color filter, resets to page 0, and refetches', async () => {
+    await wait(400);
+    searchPrintings.mockClear();
+
+    component.onColorChange('Red');
+    expect(component['color']()).toBe('Red');
+
+    await wait(400);
+    expect(searchPrintings).toHaveBeenCalledWith({
+      search: undefined,
+      type: undefined,
+      color: 'Red',
+      series: undefined,
+      page: 0,
+      size: 24,
+    });
+  });
+
+  it('onSeriesChange sets the series filter, resets to page 0, and refetches', async () => {
+    await wait(400);
+    searchPrintings.mockClear();
+
+    component.onSeriesChange('BT1');
+    expect(component['series']()).toBe('BT1');
+
+    await wait(400);
+    expect(searchPrintings).toHaveBeenCalledWith({
+      search: undefined,
+      type: undefined,
+      color: undefined,
+      series: 'BT1',
+      page: 0,
+      size: 24,
+    });
+  });
+
+  describe('colorSwatch', () => {
+    it('returns the hex for a known single color', () => {
+      expect(component['colorSwatch']('Red')).toBe('#dc2626');
+    });
+
+    it('returns a linear-gradient with both hex colors for a dual color', () => {
+      const result = component['colorSwatch']('Red/Blue');
+      expect(result).toContain('linear-gradient');
+      expect(result).toContain('#dc2626');
+      expect(result).toContain('#2563eb');
+    });
+
+    it('returns the fallback grey for an unknown color', () => {
+      expect(component['colorSwatch']('UnknownColor')).toBe('#a1a1aa');
+    });
   });
 });

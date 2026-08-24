@@ -31,7 +31,7 @@ describe('CollectionEditor', () => {
     getById = vi.fn().mockResolvedValue({
       id: 'col-1',
       name: 'Existing',
-      items: [{ quantity: 2, price: 10, card: GOKU }],
+      items: [{ quantity: 2, price: 10, language: null, card: GOKU }],
     } satisfies CollectionDraft);
     create = vi.fn().mockResolvedValue({ ok: true });
     update = vi.fn().mockResolvedValue({ ok: true });
@@ -68,38 +68,47 @@ describe('CollectionEditor', () => {
     await setup();
     component.selectPrinting(GOKU);
 
-    component.addOrUpdateItem({ quantity: 2, price: 10 });
+    component.addOrUpdateItem({ quantity: 2, price: 10, language: null });
 
-    expect(component.draft().items).toEqual([{ quantity: 2, price: 10, card: GOKU }]);
+    expect(component.draft().items).toEqual([{ quantity: 2, price: 10, language: null, card: GOKU }]);
+  });
+
+  it('addOrUpdateItem stores the language when provided', async () => {
+    await setup();
+    component.selectPrinting(GOKU);
+
+    component.addOrUpdateItem({ quantity: 2, price: 10, language: 'FR' });
+
+    expect(component.draft().items).toEqual([{ quantity: 2, price: 10, language: 'FR', card: GOKU }]);
   });
 
   it('addOrUpdateItem replaces an existing entry for the same printing instead of duplicating it', async () => {
     await setup();
     component.selectPrinting(GOKU);
-    component.addOrUpdateItem({ quantity: 2, price: 10 });
+    component.addOrUpdateItem({ quantity: 2, price: 10, language: null });
 
     component.selectPrinting(GOKU);
-    component.addOrUpdateItem({ quantity: 5, price: 8 });
+    component.addOrUpdateItem({ quantity: 5, price: 8, language: 'EN' });
 
-    expect(component.draft().items).toEqual([{ quantity: 5, price: 8, card: GOKU }]);
+    expect(component.draft().items).toEqual([{ quantity: 5, price: 8, language: 'EN', card: GOKU }]);
   });
 
   it('removeItem removes only the matching printing', async () => {
     await setup();
     component.selectPrinting(GOKU);
-    component.addOrUpdateItem({ quantity: 2, price: 10 });
+    component.addOrUpdateItem({ quantity: 2, price: 10, language: null });
     component.selectPrinting(VEGETA);
-    component.addOrUpdateItem({ quantity: 1, price: 3 });
+    component.addOrUpdateItem({ quantity: 1, price: 3, language: null });
 
     component.removeItem(GOKU);
 
-    expect(component.draft().items).toEqual([{ quantity: 1, price: 3, card: VEGETA }]);
+    expect(component.draft().items).toEqual([{ quantity: 1, price: 3, language: null, card: VEGETA }]);
   });
 
   it('changeQuantity updates only the matching printing', async () => {
     await setup();
     component.selectPrinting(GOKU);
-    component.addOrUpdateItem({ quantity: 2, price: 10 });
+    component.addOrUpdateItem({ quantity: 2, price: 10, language: null });
 
     component.changeQuantity(GOKU, 7);
 

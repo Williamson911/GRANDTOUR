@@ -270,6 +270,10 @@ const FR: Record<string, string> = {
   'cardDetail.price': 'Prix unitaire (€)',
   'cardDetail.add': 'Ajouter',
   'cardDetail.remove': 'Retirer',
+  'cardDetail.language': 'Langue',
+  'cardDetail.languageUnset': 'Non précisée',
+  'cardDetail.languageFr': 'Français',
+  'cardDetail.languageEn': 'Anglais',
 
   // Profile page
   'profile.title': 'Mon profil',
@@ -642,6 +646,10 @@ const EN: Record<string, string> = {
   'cardDetail.price': 'Unit price (€)',
   'cardDetail.add': 'Add',
   'cardDetail.remove': 'Remove',
+  'cardDetail.language': 'Language',
+  'cardDetail.languageUnset': 'Unspecified',
+  'cardDetail.languageFr': 'French',
+  'cardDetail.languageEn': 'English',
 
   // Budget page (Phase 4)
   'budget.title': 'Budget',

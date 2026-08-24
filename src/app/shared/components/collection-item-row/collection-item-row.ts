@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
-import { CardPrinting, printingDisplayName } from '../../../core/models/collection';
+import { CardLanguage, CardPrinting, printingDisplayName } from '../../../core/models/collection';
 import { cardImageUrl } from '../../../core/services/cards';
 
 @Component({
@@ -15,6 +15,7 @@ export class CollectionItemRow {
   readonly card = input.required<CardPrinting>();
   readonly quantity = input.required<number>();
   readonly price = input.required<number>();
+  readonly language = input<CardLanguage | null>(null);
 
   readonly clicked = output<void>();
   readonly quantityChanged = output<number>();

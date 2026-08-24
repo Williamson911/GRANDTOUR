@@ -40,6 +40,27 @@ describe('CardsService', () => {
     const result = await promise;
     expect(result).toEqual({ content: [], totalElements: 0, totalPages: 0 });
   });
+
+  it('getFacets calls GET /cards/facets and returns the distinct color/series values', async () => {
+    const promise = service.getFacets();
+
+    const req = httpMock.expectOne('http://localhost:8080/cards/facets');
+    expect(req.request.method).toBe('GET');
+    req.flush({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'] });
+
+    const result = await promise;
+    expect(result).toEqual({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'] });
+  });
+
+  it('getFacets returns an empty fallback when the request fails', async () => {
+    const promise = service.getFacets();
+
+    const req = httpMock.expectOne('http://localhost:8080/cards/facets');
+    req.error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
+
+    const result = await promise;
+    expect(result).toEqual({ colors: [], series: [] });
+  });
 });
 
 describe('toLeaderOption', () => {

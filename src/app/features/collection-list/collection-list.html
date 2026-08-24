@@ -20,6 +20,9 @@
     @for (item of items(); track item.id) {
       <li>
         <a [routerLink]="['/collection', item.id]" class="collection-tile">
+          @if (thumbnailUrl(item); as img) {
+            <img [src]="img" [alt]="item.name" class="collection-tile__thumb" />
+          }
           <span class="collection-tile__name">{{ item.name }}</span>
           <span class="collection-tile__count">
             {{ i18n.t('collection.list.cards', { count: item.cardCount }) }}

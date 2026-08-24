@@ -11,9 +11,12 @@ export interface CardPrinting {
   imgLink: string | null;
 }
 
+export type CardLanguage = 'FR' | 'EN';
+
 export interface CollectionItem {
   quantity: number;
   price: number;
+  language: CardLanguage | null;
   card: CardPrinting;
 }
 
@@ -28,6 +31,7 @@ export interface CollectionSummary {
   name: string;
   cardCount: number;
   totalPrice: number;
+  thumbnailImgLink: string | null;
 }
 
 export function printingKey(card: CardPrinting): string {

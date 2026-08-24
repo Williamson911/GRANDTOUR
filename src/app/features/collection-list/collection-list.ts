@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 
 import { CollectionSummary } from '../../core/models/collection';
+import { cardImageUrl } from '../../core/services/cards';
 import { CollectionsService } from '../../core/services/collections';
 import { I18nService } from '../../core/services/i18n';
 
@@ -25,5 +26,9 @@ export class CollectionList {
       this.items.set(rows);
       this.loading.set(false);
     });
+  }
+
+  protected thumbnailUrl(item: CollectionSummary): string | null {
+    return cardImageUrl(item.thumbnailImgLink);
   }
 }

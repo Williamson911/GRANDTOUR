@@ -37,6 +37,11 @@ export interface SearchPrintingsParams {
   size: number;
 }
 
+export interface CardFacets {
+  colors: string[];
+  series: string[];
+}
+
 export function toLeaderOption(row: CardResponse): LeaderOption {
   return {
     id: row.id,
@@ -90,6 +95,17 @@ export class CardsService {
     } catch (error) {
       console.error('printings search failed', error);
       return { content: [], totalElements: 0, totalPages: 0 };
+    }
+  }
+
+  async getFacets(): Promise<CardFacets> {
+    try {
+      return await firstValueFrom(
+        this.http.get<CardFacets>(`${environment.apiUrl}/cards/facets`),
+      );
+    } catch (error) {
+      console.error('facets load failed', error);
+      return { colors: [], series: [] };
     }
   }
 }
