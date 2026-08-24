@@ -2,6 +2,7 @@ import { Event } from '../models/event';
 import { Expense } from '../models/expense';
 import { Match } from '../models/match';
 import { PlayerResult } from '../models/player-result';
+import { LeaderOption } from '../models/card';
 import {
   aggregateRecord,
   bestPlacement,
@@ -14,9 +15,22 @@ import {
   filterExpensesByYear,
   filterResultsByYear,
   globalWinRate,
+  leadersPlayed,
   matchupBreakdown,
   winRateByDeck,
 } from './season-stats';
+
+function makeLeader(over: Partial<LeaderOption> & { id: string; name: string }): LeaderOption {
+  return {
+    id: over.id,
+    name: over.name,
+    backName: over.backName ?? null,
+    cardNumber: over.cardNumber ?? 'BT1-001',
+    cardType: over.cardType ?? 'LEADER',
+    imgLink: over.imgLink ?? null,
+    cardRarity: over.cardRarity ?? null,
+  };
+}
 
 function makeEvent(over: Partial<Event> & { id: string; date: Date }): Event {
   return {
@@ -52,7 +66,7 @@ function makeResult(
     id: over.id ?? `r-${over.eventId}`,
     eventId: over.eventId,
     deckName: over.deckName ?? 'Goku Black',
-    leaderPlayed: over.leaderPlayed ?? 'Goku Black',
+    leaderCard: over.leaderCard ?? makeLeader({ id: 'leader-goku-black', name: 'Goku Black' }),
     placement: over.placement ?? 1,
     totalPlayers: over.totalPlayers ?? 32,
     prizes: over.prizes ?? 0,
@@ -214,7 +228,7 @@ describe('matchupBreakdown', () => {
   const results = [
     makeResult({
       eventId: 'a',
-      leaderPlayed: 'Black',
+      leaderCard: makeLeader({ id: 'l-black', name: 'Black' }),
       matches: [
         makeMatch({ opponentLeader: 'Vegeta', result: 'Win' }),
         makeMatch({ opponentLeader: 'Vegeta', result: 'Loss' }),
@@ -223,7 +237,7 @@ describe('matchupBreakdown', () => {
     }),
     makeResult({
       eventId: 'b',
-      leaderPlayed: 'Frieza',
+      leaderCard: makeLeader({ id: 'l-frieza', name: 'Frieza' }),
       matches: [
         makeMatch({ opponentLeader: 'Vegeta', result: 'Win' }),
         makeMatch({ opponentLeader: 'Goku', result: 'Loss' }),
@@ -241,14 +255,44 @@ describe('matchupBreakdown', () => {
     expect(out[0].played).toBe(3);
   });
 
-  it('filters by leader played when deckFilter is provided', () => {
-    const out = matchupBreakdown(results, 'Black');
+  it('filters by leader played when leaderCardId is provided', () => {
+    const out = matchupBreakdown(results, 'l-black');
     expect(out.find((m) => m.opponentLeader === 'Goku')).toBeUndefined();
     expect(out.find((m) => m.opponentLeader === 'Vegeta')?.played).toBe(2);
   });
 
-  it('returns [] when no match for the deck filter', () => {
-    expect(matchupBreakdown(results, 'Unknown')).toEqual([]);
+  it('returns [] when no match for the leaderCardId filter', () => {
+    expect(matchupBreakdown(results, 'unknown-id')).toEqual([]);
+  });
+});
+
+describe('leadersPlayed', () => {
+  it('returns [] on empty input', () => {
+    expect(leadersPlayed([])).toEqual([]);
+  });
+
+  it('returns distinct leaders sorted by name, deduplicated by id', () => {
+    const results = [
+      makeResult({ eventId: 'a', leaderCard: makeLeader({ id: 'l-black', name: 'Black' }) }),
+      makeResult({ eventId: 'b', leaderCard: makeLeader({ id: 'l-black', name: 'Black' }) }),
+      makeResult({ eventId: 'c', leaderCard: makeLeader({ id: 'l-frieza', name: 'Frieza' }) }),
+    ];
+    expect(leadersPlayed(results)).toEqual([
+      { id: 'l-black', name: 'Black' },
+      { id: 'l-frieza', name: 'Frieza' },
+    ]);
+  });
+
+  it('uses the combined front / back display name when the leader has an awakened face', () => {
+    const results = [
+      makeResult({
+        eventId: 'a',
+        leaderCard: makeLeader({ id: 'l-aeos', name: 'AEOS', backName: 'AEOS, POUVOIR DES PREDECESSEURS' }),
+      }),
+    ];
+    expect(leadersPlayed(results)).toEqual([
+      { id: 'l-aeos', name: 'AEOS / AEOS, POUVOIR DES PREDECESSEURS' },
+    ]);
   });
 });
 

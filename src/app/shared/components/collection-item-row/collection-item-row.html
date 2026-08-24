@@ -1,0 +1,18 @@
+<div class="item-row" (click)="select()">
+  @if (imgUrl(); as img) {
+    <img [src]="img" [alt]="displayName()" class="item-row__thumb" />
+  }
+  <span class="item-row__name">{{ displayName() }}</span>
+  <span class="item-row__number">{{ card().cardNumber }}</span>
+
+  <div class="item-row__qty">
+    <button type="button" (click)="decrement(); $event.stopPropagation()">−</button>
+    <span>{{ quantity() }}</span>
+    <button type="button" (click)="increment(); $event.stopPropagation()">+</button>
+  </div>
+
+  <span class="item-row__price">{{ price() | number: '1.2-2' }} €</span>
+  <span class="item-row__total">{{ lineTotal() | number: '1.2-2' }} €</span>
+
+  <button type="button" class="item-row__remove" (click)="remove($event)">×</button>
+</div>

@@ -6,13 +6,14 @@ import { environment } from '../../../environments/environment';
 import { Match } from '../models/match';
 import { PlayerResult } from '../models/player-result';
 import { AuthService } from './auth';
+import { CardResponse, toLeaderOption } from './cards';
 
 interface ResultsResponse {
   id: string;
   userId: string;
   eventId: string;
   deckName: string;
-  leaderPlayed: string;
+  leaderCard: CardResponse;
   placement: number;
   totalPlayers: number;
   prizes: number;
@@ -29,7 +30,7 @@ function toResult(row: ResultsResponse): PlayerResult {
     id: row.id,
     eventId: row.eventId,
     deckName: row.deckName,
-    leaderPlayed: row.leaderPlayed,
+    leaderCard: toLeaderOption(row.leaderCard),
     placement: row.placement,
     totalPlayers: row.totalPlayers,
     prizes: row.prizes,
@@ -91,7 +92,7 @@ export class SeasonService {
     eventId: string,
     patch: {
       deckName: string;
-      leaderPlayed: string;
+      leaderCardId: string;
       placement: number;
       totalPlayers: number;
       prizes: number;
@@ -104,7 +105,7 @@ export class SeasonService {
       await firstValueFrom(
         this.http.put(`${environment.apiUrl}/results/${eventId}`, {
           deckName: patch.deckName,
-          leaderPlayed: patch.leaderPlayed,
+          leaderCardId: patch.leaderCardId,
           placement: patch.placement,
           totalPlayers: patch.totalPlayers,
           prizes: patch.prizes,
@@ -160,7 +161,7 @@ export class SeasonService {
       await firstValueFrom(
         this.http.put(`${environment.apiUrl}/results/${eventId}`, {
           deckName: current.deckName,
-          leaderPlayed: current.leaderPlayed,
+          leaderCardId: current.leaderCard.id,
           placement: current.placement,
           totalPlayers: current.totalPlayers,
           prizes: current.prizes,
@@ -171,6 +172,48 @@ export class SeasonService {
       await this.reload();
     } catch (error) {
       console.error('match add failed', error);
+    }
+  }
+
+  async updateMatch(
+    eventId: string,
+    round: number,
+    input: {
+      opponentLeader: string;
+      result: Match['result'];
+      opponentName?: string;
+      notes?: string;
+    },
+  ): Promise<void> {
+    if (!this.auth.currentUserId()) return;
+    const current = this._results()[eventId];
+    if (!current) return;
+    const nextMatches = (current.matches ?? []).map((m) =>
+      m.round === round
+        ? {
+            round,
+            opponentLeader: input.opponentLeader,
+            result: input.result,
+            ...(input.opponentName ? { opponentName: input.opponentName } : {}),
+            ...(input.notes ? { notes: input.notes } : {}),
+          }
+        : m,
+    );
+    try {
+      await firstValueFrom(
+        this.http.put(`${environment.apiUrl}/results/${eventId}`, {
+          deckName: current.deckName,
+          leaderCardId: current.leaderCard.id,
+          placement: current.placement,
+          totalPlayers: current.totalPlayers,
+          prizes: current.prizes,
+          notes: current.notes,
+          matches: nextMatches,
+        }),
+      );
+      await this.reload();
+    } catch (error) {
+      console.error('match update failed', error);
     }
   }
 
@@ -185,7 +228,7 @@ export class SeasonService {
       await firstValueFrom(
         this.http.put(`${environment.apiUrl}/results/${eventId}`, {
           deckName: current.deckName,
-          leaderPlayed: current.leaderPlayed,
+          leaderCardId: current.leaderCard.id,
           placement: current.placement,
           totalPlayers: current.totalPlayers,
           prizes: current.prizes,

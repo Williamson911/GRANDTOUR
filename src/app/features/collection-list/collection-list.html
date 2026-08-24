@@ -1,0 +1,34 @@
+<section class="collection-list">
+  <header class="collection-list__head">
+    <h1>{{ i18n.t('collection.list.title') }}</h1>
+  </header>
+
+  @if (!loading() && items().length === 0) {
+    <p>{{ i18n.t('collection.list.empty') }}</p>
+  }
+
+  <ul class="collection-list__grid">
+    <li>
+      <a
+        routerLink="/collection/new"
+        class="collection-tile collection-tile--add"
+        [attr.aria-label]="i18n.t('collection.list.add')"
+      >
+        <span class="collection-tile__plus" aria-hidden="true">+</span>
+      </a>
+    </li>
+    @for (item of items(); track item.id) {
+      <li>
+        <a [routerLink]="['/collection', item.id]" class="collection-tile">
+          <span class="collection-tile__name">{{ item.name }}</span>
+          <span class="collection-tile__count">
+            {{ i18n.t('collection.list.cards', { count: item.cardCount }) }}
+          </span>
+          <span class="collection-tile__price">
+            {{ item.totalPrice | currency: 'EUR' : 'symbol' : '1.0-2' }}
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+</section>

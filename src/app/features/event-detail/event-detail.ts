@@ -17,11 +17,12 @@ import {
 import { Router, RouterLink } from '@angular/router';
 
 import { ExpenseCategory } from '../../core/models/expense';
-import { MatchResult } from '../../core/models/match';
+import { Match, MatchResult } from '../../core/models/match';
 import { BudgetService } from '../../core/services/budget';
 import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
 import { SeasonService } from '../../core/services/season';
+import { LeaderPicker } from '../../shared/components/leader-picker/leader-picker';
 
 const CATEGORIES: ExpenseCategory[] = [
   'Transport',
@@ -40,6 +41,7 @@ const MATCH_RESULTS: MatchResult[] = ['Win', 'Loss', 'Draw', 'Bye'];
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
+    LeaderPicker,
   ],
   templateUrl: './event-detail.html',
   styleUrl: './event-detail.scss',
@@ -95,12 +97,13 @@ export class EventDetail {
   });
 
   protected readonly resultSaved = signal(false);
+  protected readonly editingMatchRound = signal<number | null>(null);
 
   protected readonly resultForm: FormGroup = this.fb.group({
     placement: [1, [Validators.required, Validators.min(1)]],
     totalPlayers: [0, [Validators.required, Validators.min(1)]],
     deckName: ['', Validators.required],
-    leaderPlayed: ['', Validators.required],
+    leaderCardId: [null as string | null, Validators.required],
     prizes: [0, [Validators.min(0)]],
     notes: [''],
   });
@@ -132,7 +135,7 @@ export class EventDetail {
             placement: r.placement,
             totalPlayers: r.totalPlayers,
             deckName: r.deckName,
-            leaderPlayed: r.leaderPlayed,
+            leaderCardId: r.leaderCard.id,
             prizes: r.prizes,
             notes: r.notes ?? '',
           },
@@ -159,7 +162,7 @@ export class EventDetail {
       placement: Number(v.placement),
       totalPlayers: Number(v.totalPlayers),
       deckName: String(v.deckName).trim(),
-      leaderPlayed: String(v.leaderPlayed).trim(),
+      leaderCardId: String(v.leaderCardId),
       prizes: Number(v.prizes) || 0,
       notes: v.notes ? String(v.notes) : undefined,
     });
@@ -174,13 +177,27 @@ export class EventDetail {
       placement: 1,
       totalPlayers: 0,
       deckName: '',
-      leaderPlayed: '',
+      leaderCardId: null,
       prizes: 0,
       notes: '',
     });
   }
 
-  protected addMatch(): void {
+  protected editMatch(match: Match): void {
+    this.editingMatchRound.set(match.round);
+    this.matchForm.patchValue({
+      opponentLeader: match.opponentLeader,
+      opponentName: match.opponentName ?? '',
+      result: match.result,
+    });
+  }
+
+  protected cancelEditMatch(): void {
+    this.editingMatchRound.set(null);
+    this.matchForm.reset({ opponentLeader: '', opponentName: '', result: 'Win' });
+  }
+
+  protected submitMatch(): void {
     if (!this.result()) {
       this.resultForm.markAllAsTouched();
       return;
@@ -190,15 +207,29 @@ export class EventDetail {
       return;
     }
     const v = this.matchForm.value;
-    this.season.addMatch(this.eventId(), {
+    const input = {
       opponentLeader: String(v.opponentLeader).trim(),
       opponentName: v.opponentName ? String(v.opponentName).trim() : undefined,
       result: v.result as MatchResult,
-    });
+    };
+    const editingRound = this.editingMatchRound();
+    if (editingRound !== null) {
+      this.season.updateMatch(this.eventId(), editingRound, input);
+    } else {
+      this.season.addMatch(this.eventId(), input);
+    }
+    this.editingMatchRound.set(null);
     this.matchForm.reset({ opponentLeader: '', opponentName: '', result: 'Win' });
   }
 
   protected deleteMatch(round: number): void {
+    // Deleting any match renumbers every later round (see SeasonService.deleteMatch),
+    // so a tracked editingMatchRound could silently point at the wrong match afterward
+    // (not just the one that got deleted) — always drop edit mode on delete, not just
+    // when the deleted round is the one being edited.
+    if (this.editingMatchRound() !== null) {
+      this.cancelEditMatch();
+    }
     this.season.deleteMatch(this.eventId(), round);
   }
 

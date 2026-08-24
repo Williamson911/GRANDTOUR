@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.card-grid__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  input,
+  select {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+  }
+}
+
+.card-grid__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.card-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+.card-grid__thumb {
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.card-grid__name {
+  font-size: 12px;
+  text-align: center;
+}
+
+.card-grid__number {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.card-grid__empty {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.card-grid__pager {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

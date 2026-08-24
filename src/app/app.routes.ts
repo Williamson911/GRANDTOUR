@@ -80,6 +80,27 @@ export const routes: Routes = [
     title: 'Dashboard — Grand Tour',
   },
   {
+    path: 'collection',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/collection-list/collection-list').then((m) => m.CollectionList),
+    title: 'Collections — Grand Tour',
+  },
+  {
+    path: 'collection/new',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/collection-editor/collection-editor').then((m) => m.CollectionEditor),
+    title: 'Nouvelle collection — Grand Tour',
+  },
+  {
+    path: 'collection/:collectionId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/collection-editor/collection-editor').then((m) => m.CollectionEditor),
+    title: 'Collection — Grand Tour',
+  },
+  {
     path: 'event/:eventId',
     canActivate: [authGuard],
     loadComponent: () =>

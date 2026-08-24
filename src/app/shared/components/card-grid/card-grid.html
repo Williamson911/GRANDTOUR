@@ -1,0 +1,46 @@
+<div class="card-grid">
+  <div class="card-grid__filters">
+    <input
+      type="text"
+      [placeholder]="i18n.t('cardGrid.searchPlaceholder')"
+      (input)="onSearchInput($any($event.target).value)"
+    />
+    <select (change)="onTypeChange($any($event.target).value)">
+      <option value="">{{ i18n.t('cardGrid.allTypes') }}</option>
+      @for (t of cardTypes; track t) {
+        <option [value]="t">{{ t }}</option>
+      }
+    </select>
+    <input
+      type="text"
+      [placeholder]="i18n.t('cardGrid.allColors')"
+      (input)="onColorInput($any($event.target).value)"
+    />
+    <input
+      type="text"
+      [placeholder]="i18n.t('cardGrid.allSeries')"
+      (input)="onSeriesInput($any($event.target).value)"
+    />
+  </div>
+
+  @if (results().length === 0) {
+    <p class="card-grid__empty">{{ i18n.t('cardGrid.empty') }}</p>
+  } @else {
+    <ul class="card-grid__list">
+      @for (printing of results(); track trackByPrinting($index, printing)) {
+        <li class="card-grid__item" (click)="select(printing)">
+          @if (imageUrl(printing.imgLink); as img) {
+            <img [src]="img" [alt]="printing.name" class="card-grid__thumb" />
+          }
+          <span class="card-grid__name">{{ printing.name }}</span>
+          <span class="card-grid__number">{{ printing.cardNumber }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="card-grid__pager">
+    <button type="button" (click)="prevPage()">{{ i18n.t('cardGrid.prev') }}</button>
+    <button type="button" (click)="nextPage()">{{ i18n.t('cardGrid.next') }}</button>
+  </div>
+</div>

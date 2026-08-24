@@ -79,7 +79,11 @@
           </label>
           <label class="field">
             <span>{{ i18n.t('detail.result.leaderPlayed') }}</span>
-            <input type="text" formControlName="leaderPlayed" />
+            <app-leader-picker
+              mode="linked"
+              formControlName="leaderCardId"
+              [initialCard]="result()?.leaderCard"
+            />
           </label>
           <label class="field">
             <span>{{ i18n.t('detail.result.prizes') }}</span>
@@ -133,7 +137,12 @@
         } @else {
           <ul class="match-list">
             @for (match of result()!.matches; track match.round) {
-              <li class="match" [class]="'match--' + match.result.toLowerCase()">
+              <li
+                class="match"
+                [class]="'match--' + match.result.toLowerCase()"
+                [class.match--editing]="editingMatchRound() === match.round"
+                (click)="editMatch(match)"
+              >
                 <span class="match__round">R{{ match.round }}</span>
                 <span class="match__leader">{{ match.opponentLeader }}</span>
                 @if (match.opponentName) {
@@ -143,7 +152,7 @@
                 <button
                   type="button"
                   class="match__delete"
-                  (click)="deleteMatch(match.round)"
+                  (click)="deleteMatch(match.round); $event.stopPropagation()"
                   [attr.aria-label]="i18n.t('detail.matches.delete')"
                 >
                   ×
@@ -153,11 +162,11 @@
           </ul>
         }
 
-        <form class="form match-form" [formGroup]="matchForm" (ngSubmit)="addMatch()" novalidate>
+        <form class="form match-form" [formGroup]="matchForm" (ngSubmit)="submitMatch()" novalidate>
           <div class="form__grid form__grid--compact">
             <label class="field">
               <span>{{ i18n.t('detail.matches.opponentLeader') }}</span>
-              <input type="text" formControlName="opponentLeader" />
+              <app-leader-picker mode="suggestion" formControlName="opponentLeader" />
             </label>
             <label class="field">
               <span>{{ i18n.t('detail.matches.opponentName') }}</span>
@@ -174,8 +183,13 @@
           </div>
           <div class="form__actions">
             <button type="submit" class="btn btn--accent">
-              {{ i18n.t('detail.matches.cta') }}
+              {{ editingMatchRound() === null ? i18n.t('detail.matches.cta') : i18n.t('detail.matches.update') }}
             </button>
+            @if (editingMatchRound() !== null) {
+              <button type="button" class="btn btn--ghost-danger" (click)="cancelEditMatch()">
+                {{ i18n.t('detail.matches.cancelEdit') }}
+              </button>
+            }
           </div>
         </form>
       } @else {

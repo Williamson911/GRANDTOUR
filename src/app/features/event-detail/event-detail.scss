@@ -345,6 +345,17 @@
 
 .match {
   grid-template-columns: 44px 1fr auto auto auto;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+.match--editing {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .match__round {

@@ -129,7 +129,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   margin-left: auto;
 }
 
@@ -191,7 +191,7 @@
 }
 
 .nav__logout {
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(17, 14, 17, 0.15);
   background: transparent;
@@ -201,6 +201,8 @@
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
@@ -212,7 +214,7 @@
 }
 
 .nav__link {
-  padding: 8px 14px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   color: var(--color-bg);
   text-decoration: none;
@@ -221,6 +223,8 @@
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
@@ -241,7 +245,7 @@
 }
 
 /* ---------- Tablet ---------- */
-@media (max-width: 960px) {
+@media (max-width: 1180px) {
   .topbar {
     gap: 16px;
     padding: 0 16px;

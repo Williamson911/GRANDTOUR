@@ -27,6 +27,7 @@ import {
   filterExpensesByYear,
   filterResultsByYear,
   globalWinRate,
+  leadersPlayed,
   matchupBreakdown,
   winRateByDeck,
 } from '../../core/stats/season-stats';
@@ -62,7 +63,7 @@ export class Dashboard implements OnDestroy {
   );
 
   protected readonly selectedYear = signal(new Date().getFullYear());
-  protected readonly selectedDeck = signal<string>('');
+  protected readonly selectedLeaderId = signal<string>('');
 
   private readonly events = computed(() => this.eventService.events());
   private readonly results = computed(() => this.season.allResults());
@@ -94,10 +95,13 @@ export class Dashboard implements OnDestroy {
   protected readonly deckRows = computed(() =>
     winRateByDeck(this.filteredResults()),
   );
+  protected readonly leaderOptions = computed(() =>
+    leadersPlayed(this.filteredResults()),
+  );
   protected readonly matchupRows = computed(() =>
     matchupBreakdown(
       this.filteredResults(),
-      this.selectedDeck() || undefined,
+      this.selectedLeaderId() || undefined,
     ),
   );
 
@@ -159,8 +163,8 @@ export class Dashboard implements OnDestroy {
     if (!Number.isNaN(y)) this.selectedYear.set(y);
   }
 
-  protected onDeckChange(value: string): void {
-    this.selectedDeck.set(value);
+  protected onLeaderChange(value: string): void {
+    this.selectedLeaderId.set(value);
   }
 
   protected formatWinRate(rate: number): string {

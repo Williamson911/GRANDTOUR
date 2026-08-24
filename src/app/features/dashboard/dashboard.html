@@ -80,12 +80,12 @@
         <label class="bento__filter">
           <span>{{ i18n.t('dashboard.matchup.deckFilter') }}</span>
           <select
-            [value]="selectedDeck()"
-            (change)="onDeckChange($any($event.target).value)"
+            [value]="selectedLeaderId()"
+            (change)="onLeaderChange($any($event.target).value)"
           >
             <option value="">{{ i18n.t('dashboard.matchup.all') }}</option>
-            @for (row of deckRows(); track row.deckName) {
-              <option [value]="row.deckName">{{ row.deckName }}</option>
+            @for (opt of leaderOptions(); track opt.id) {
+              <option [value]="opt.id">{{ opt.name }}</option>
             }
           </select>
         </label>

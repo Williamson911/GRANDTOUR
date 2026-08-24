@@ -1,0 +1,60 @@
+<section class="editor">
+  <a class="editor__back" routerLink="/collection">{{ i18n.t('collection.editor.back') }}</a>
+
+  <input
+    type="text"
+    class="editor__name"
+    [placeholder]="i18n.t('collection.editor.namePlaceholder')"
+    [value]="draft().name"
+    (input)="onNameInput($any($event.target).value)"
+  />
+
+  <div class="editor__layout">
+    <app-card-grid (printingSelected)="selectPrinting($event)" />
+
+    <aside class="editor__mine">
+      <h3>{{ i18n.t('collection.editor.myCollection') }}</h3>
+      @if (loading()) {
+        <p>{{ i18n.t('collection.editor.loading') }}</p>
+      }
+      @if (items().length > 0) {
+        <p class="editor__summary">
+          {{ i18n.t('collection.editor.summary', { count: cardCount(), total: totalPrice() }) }}
+        </p>
+      }
+      @if (items().length === 0) {
+        <p>{{ i18n.t('collection.editor.empty') }}</p>
+      } @else {
+        @for (item of items(); track item.card.cardId + ':' + item.card.variantId) {
+          <app-collection-item-row
+            [card]="item.card"
+            [quantity]="item.quantity"
+            [price]="item.price"
+            (clicked)="selectExistingItem(item)"
+            (quantityChanged)="changeQuantity(item.card, $event)"
+            (removed)="removeItem(item.card)"
+          />
+        }
+      }
+    </aside>
+  </div>
+
+  @if (selectedPrinting(); as printing) {
+    <app-card-detail-panel
+      [printing]="printing"
+      [initialQuantity]="selectedExisting()?.quantity ?? null"
+      [initialPrice]="selectedExisting()?.price ?? null"
+      (added)="addOrUpdateItem($event)"
+      (removed)="removeSelectedItem()"
+      (closed)="closeDetail()"
+    />
+  }
+
+  @if (saveError()) {
+    <p class="editor__error">{{ saveError() }}</p>
+  }
+
+  <button type="button" class="btn btn--accent" [disabled]="saving()" (click)="save()">
+    {{ i18n.t('collection.editor.save') }}
+  </button>
+</section>

@@ -1,0 +1,39 @@
+@if (mode() === 'linked' && selectedOption(); as opt) {
+  <div class="leader-picker__chip">
+    @if (imageUrl(opt.imgLink); as img) {
+      <img [src]="img" [alt]="opt.name" class="leader-picker__thumb" />
+    }
+    <span class="leader-picker__name">{{ displayName(opt) }}</span>
+    <button
+      type="button"
+      class="leader-picker__change"
+      [disabled]="disabled()"
+      (click)="change()"
+    >
+      {{ i18n.t('leaderPicker.change') }}
+    </button>
+  </div>
+} @else {
+  <div class="leader-picker__search">
+    <input
+      type="text"
+      [value]="mode() === 'suggestion' ? textValue() : query()"
+      [disabled]="disabled()"
+      [placeholder]="i18n.t('leaderPicker.searchPlaceholder')"
+      (input)="onQueryInput($any($event.target).value)"
+      (blur)="blur()"
+    />
+    @if (results().length > 0) {
+      <ul class="leader-picker__dropdown">
+        @for (opt of results(); track opt.id) {
+          <li (click)="select(opt)">
+            @if (imageUrl(opt.imgLink); as img) {
+              <img [src]="img" [alt]="opt.name" class="leader-picker__thumb leader-picker__thumb--sm" />
+            }
+            <span>{{ displayName(opt) }} · {{ opt.cardNumber }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

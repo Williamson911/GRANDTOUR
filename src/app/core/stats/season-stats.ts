@@ -1,3 +1,4 @@
+import { leaderDisplayName } from '../models/card';
 import { Event } from '../models/event';
 import { ExpenseCategory, Expense } from '../models/expense';
 import { Match } from '../models/match';
@@ -151,10 +152,10 @@ export function winRateByDeck(results: PlayerResult[]): DeckStatsRow[] {
 
 export function matchupBreakdown(
   results: PlayerResult[],
-  deckFilter?: string,
+  leaderCardId?: string,
 ): MatchupRow[] {
-  const scope = deckFilter
-    ? results.filter((r) => r.leaderPlayed === deckFilter)
+  const scope = leaderCardId
+    ? results.filter((r) => r.leaderCard.id === leaderCardId)
     : results;
   const byOpp = new Map<string, Match[]>();
   for (const r of scope) {
@@ -178,6 +179,16 @@ export function matchupBreakdown(
     (a, b) =>
       b.played - a.played || a.opponentLeader.localeCompare(b.opponentLeader),
   );
+}
+
+export function leadersPlayed(
+  results: PlayerResult[],
+): { id: string; name: string }[] {
+  const byId = new Map<string, string>();
+  for (const r of results) byId.set(r.leaderCard.id, leaderDisplayName(r.leaderCard));
+  return [...byId.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function bestPlacement(
