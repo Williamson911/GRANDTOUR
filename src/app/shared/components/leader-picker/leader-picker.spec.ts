@@ -116,4 +116,80 @@ describe('LeaderPicker', () => {
       expect(component.selectedOption()).toBeNull();
     });
   });
+
+  describe('linked mode — awakened-face toggle', () => {
+    it('defaults to the awakened-face image for a leader with a back face', async () => {
+      await setup('linked');
+      component.select(GOKU);
+      fixture.detectChanges();
+
+      const img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
+      expect(img.src).toBe(
+        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030_b.webp',
+      );
+    });
+
+    it('does not render a toggle button for a leader with no back face', async () => {
+      await setup('linked');
+      component.select(VEGETA);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.leader-picker__toggle-face');
+      expect(toggle).toBeNull();
+    });
+
+    it('toggles the image and resets on re-select of a different leader', async () => {
+      await setup('linked');
+      component.select(GOKU);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector(
+        '.leader-picker__toggle-face',
+      ) as HTMLButtonElement;
+      toggle.click();
+      fixture.detectChanges();
+
+      let img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
+      expect(img.src).toBe(
+        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
+      );
+
+      component.change();
+      component.select(GOKU);
+      fixture.detectChanges();
+
+      img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
+      expect(img.src).toBe(
+        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030_b.webp',
+      );
+    });
+
+    it('does not spuriously reset the toggle when initialCard is re-hydrated with the same id under a new object reference', async () => {
+      await setup('linked');
+      component.select(GOKU);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector(
+        '.leader-picker__toggle-face',
+      ) as HTMLButtonElement;
+      toggle.click();
+      fixture.detectChanges();
+
+      let img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
+      expect(img.src).toBe(
+        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
+      );
+
+      // Simulate a parent computed() rebuilding a brand-new object for the
+      // same leader (same id, new reference) — e.g. after an unrelated save.
+      fixture.componentRef.setInput('initialCard', { ...GOKU });
+      component.writeValue(GOKU.id);
+      fixture.detectChanges();
+
+      img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
+      expect(img.src).toBe(
+        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
+      );
+    });
+  });
 });

@@ -130,4 +130,38 @@ describe('CardDetailPanel', () => {
 
     expect(spy).toHaveBeenCalledWith({ quantity: 1, price: 0, language: 'EN' });
   });
+
+  it('emits closed() when the backdrop is clicked', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    const backdrop = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.detail-panel__backdrop',
+    )!;
+    backdrop.click();
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('does not emit closed() when the panel itself is clicked', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    const panel = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.detail-panel')!;
+    panel.click();
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('emits closed() when Escape is pressed', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(spy).toHaveBeenCalled();
+  });
 });

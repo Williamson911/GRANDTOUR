@@ -2,6 +2,17 @@
   display: block;
 }
 
+.detail-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
 .detail-panel {
   position: relative;
   background: var(--color-surface);
@@ -11,6 +22,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .detail-panel__close {

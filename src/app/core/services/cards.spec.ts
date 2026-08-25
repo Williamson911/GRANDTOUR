@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { cardImageUrl, CardsService, toLeaderOption } from './cards';
+import { cardBackImageUrl, cardImageUrl, CardsService, toLeaderOption } from './cards';
 
 describe('CardsService', () => {
   let service: CardsService;
@@ -111,5 +111,17 @@ describe('cardImageUrl', () => {
 
   it('returns null when imgLink is null', () => {
     expect(cardImageUrl(null)).toBeNull();
+  });
+});
+
+describe('cardBackImageUrl', () => {
+  it('builds the DeckPlanet awakened-face asset URL from an imgLink token', () => {
+    expect(cardBackImageUrl('BT18-030')).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030_b.webp',
+    );
+  });
+
+  it('returns null when imgLink is null', () => {
+    expect(cardBackImageUrl(null)).toBeNull();
   });
 });

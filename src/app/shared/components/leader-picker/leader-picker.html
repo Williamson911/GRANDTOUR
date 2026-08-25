@@ -1,9 +1,23 @@
 @if (mode() === 'linked' && selectedOption(); as opt) {
   <div class="leader-picker__chip">
-    @if (imageUrl(opt.imgLink); as img) {
+    @if (chipImageUrl(opt); as img) {
       <img [src]="img" [alt]="opt.name" class="leader-picker__thumb" />
     }
     <span class="leader-picker__name">{{ displayName(opt) }}</span>
+    @if (opt.backName) {
+      <button
+        type="button"
+        class="leader-picker__toggle-face leader-picker__change"
+        [disabled]="disabled()"
+        (click)="toggleFace()"
+      >
+        {{
+          showAwakened()
+            ? i18n.t('leaderPicker.viewNormalFace')
+            : i18n.t('leaderPicker.viewAwakenedFace')
+        }}
+      </button>
+    }
     <button
       type="button"
       class="leader-picker__change"

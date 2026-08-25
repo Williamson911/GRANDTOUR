@@ -58,6 +58,10 @@ export function cardImageUrl(imgLink: string | null): string | null {
   return imgLink ? `${DO_ASSETS}/dbs_masters/${imgLink}.webp` : null;
 }
 
+export function cardBackImageUrl(imgLink: string | null): string | null {
+  return imgLink ? `${DO_ASSETS}/dbs_masters/${imgLink}_b.webp` : null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CardsService {
   private readonly http = inject(HttpClient);
