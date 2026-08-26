@@ -110,8 +110,6 @@ describe('CollectionItemRow', () => {
 
   it('uses the normal-face image for a card with no back face', () => {
     const img = fixture.nativeElement.querySelector('.item-row__thumb') as HTMLImageElement;
-    expect(img.src).toBe(
-      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-    );
+    expect(img.src).toBe('http://localhost:8080/cards/images/BT18-030');
   });
 });

@@ -123,14 +123,16 @@ describe('toLeaderOption', () => {
 });
 
 describe('cardImageUrl', () => {
-  it('builds the DeckPlanet asset URL from an imgLink token', () => {
-    expect(cardImageUrl('BT18-030')).toBe(
-      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-    );
+  it('builds a backend image URL from a plain imgLink token', () => {
+    expect(cardImageUrl('BT18-030')).toBe('http://localhost:8080/cards/images/BT18-030');
   });
 
   it('returns null when imgLink is null', () => {
     expect(cardImageUrl(null)).toBeNull();
+  });
+
+  it('builds a backend image URL for a card-variant imgLink token (with underscore suffix)', () => {
+    expect(cardImageUrl('BT18-147_GDR')).toBe('http://localhost:8080/cards/images/BT18-147_GDR');
   });
 });
 

@@ -225,9 +225,7 @@ describe('CardDetailPanel', () => {
     fixture.detectChanges();
 
     let img = fixture.nativeElement.querySelector('.detail-panel__thumb') as HTMLImageElement;
-    expect(img.src).toBe(
-      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT28-056.webp',
-    );
+    expect(img.src).toBe('http://localhost:8080/cards/images/BT28-056');
 
     fixture.componentRef.setInput('printing', VEGETA);
     fixture.componentRef.setInput('initialQuantity', null);

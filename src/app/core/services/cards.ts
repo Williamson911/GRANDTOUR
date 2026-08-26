@@ -57,7 +57,9 @@ export function toLeaderOption(row: CardResponse): LeaderOption {
 }
 
 export function cardImageUrl(imgLink: string | null): string | null {
-  return imgLink ? `${DO_ASSETS}/dbs_masters/${imgLink}.webp` : null;
+  // Front-face images are stored in our own database and served through the
+  // backend's universal image endpoint (see CardController#getImage).
+  return imgLink ? `${environment.apiUrl}/cards/images/${encodeURIComponent(imgLink)}` : null;
 }
 
 export function cardBackImageUrl(imgLink: string | null): string | null {

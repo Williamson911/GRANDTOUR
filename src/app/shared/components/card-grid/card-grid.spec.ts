@@ -132,6 +132,21 @@ describe('CardGrid', () => {
     expect(component.rarityOptions()).toEqual(['Common[C]', 'Uncommon[UC]']);
   });
 
+  it('filters out a null rarity facet instead of crashing the grid', async () => {
+    getFacets.mockResolvedValue({
+      colors: ['Red', 'Blue'],
+      series: ['BT1', 'BT2'],
+      rarities: ['Common[C]', null, 'Uncommon[UC]'],
+    });
+    fixture = TestBed.createComponent(CardGrid);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    await wait(400);
+    expect(component.rarityOptions()).toEqual(['Common[C]', 'Uncommon[UC]']);
+    expect(() => fixture.detectChanges()).not.toThrow();
+  });
+
   it('renders rarity filter options with a readable label, not the raw bracketed value', async () => {
     await wait(400);
     fixture.detectChanges();
@@ -237,9 +252,7 @@ describe('CardGrid', () => {
     fixture.detectChanges();
 
     const img = fixture.nativeElement.querySelector('.card-grid__thumb') as HTMLImageElement;
-    expect(img.src).toBe(
-      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-    );
+    expect(img.src).toBe('http://localhost:8080/cards/images/BT18-030');
   });
 
   describe('color and rarity badges', () => {

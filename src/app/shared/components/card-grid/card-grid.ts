@@ -70,7 +70,9 @@ export class CardGrid {
     void this.cards.getFacets().then((facets) => {
       this.colorOptions.set(facets.colors);
       this.seriesOptions.set(facets.series);
-      this.rarityOptions.set(facets.rarities);
+      // Defensive: a stray null in the backend's distinct-rarity list would
+      // otherwise crash rarityLabel()/rarityCode() and blank the whole grid.
+      this.rarityOptions.set(facets.rarities.filter((r): r is string => r != null));
     });
   }
 

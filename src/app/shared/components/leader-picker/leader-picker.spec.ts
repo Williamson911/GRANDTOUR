@@ -150,9 +150,7 @@ describe('LeaderPicker', () => {
       fixture.detectChanges();
 
       let img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
-      expect(img.src).toBe(
-        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-      );
+      expect(img.src).toBe('http://localhost:8080/cards/images/BT18-030');
 
       component.change();
       component.select(GOKU);
@@ -193,9 +191,7 @@ describe('LeaderPicker', () => {
       fixture.detectChanges();
 
       let img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
-      expect(img.src).toBe(
-        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-      );
+      expect(img.src).toBe('http://localhost:8080/cards/images/BT18-030');
 
       // Simulate a parent computed() rebuilding a brand-new object for the
       // same leader (same id, new reference) — e.g. after an unrelated save.
@@ -204,9 +200,7 @@ describe('LeaderPicker', () => {
       fixture.detectChanges();
 
       img = fixture.nativeElement.querySelector('.leader-picker__thumb') as HTMLImageElement;
-      expect(img.src).toBe(
-        'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
-      );
+      expect(img.src).toBe('http://localhost:8080/cards/images/BT18-030');
     });
 
     it('does not leak the chip toggle state into the search dropdown display name', async () => {
