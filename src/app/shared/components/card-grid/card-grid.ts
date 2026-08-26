@@ -3,8 +3,15 @@ import { Component, inject, output, signal } from '@angular/core';
 import { from, Subject } from 'rxjs';
 import { debounceTime, switchMap } from 'rxjs/operators';
 
-import { CardPrinting, printingKey } from '../../../core/models/collection';
-import { cardImageUrl, CardsService, PrintingsPage } from '../../../core/services/cards';
+import { CardPrinting, printingDisplayName, printingKey } from '../../../core/models/collection';
+import {
+  awakenedAwareImageUrl,
+  CardsService,
+  colorSwatch as sharedColorSwatch,
+  PrintingsPage,
+  rarityCode as sharedRarityCode,
+  rarityLabel as sharedRarityLabel,
+} from '../../../core/services/cards';
 import { I18nService } from '../../../core/services/i18n';
 
 const CARD_TYPES = [
@@ -37,8 +44,10 @@ export class CardGrid {
   protected readonly type = signal('');
   protected readonly color = signal('');
   protected readonly series = signal('');
+  protected readonly rarity = signal('');
   readonly colorOptions = signal<string[]>([]);
   readonly seriesOptions = signal<string[]>([]);
+  readonly rarityOptions = signal<string[]>([]);
   readonly results = signal<CardPrinting[]>([]);
   readonly totalPages = signal(0);
 
@@ -61,6 +70,7 @@ export class CardGrid {
     void this.cards.getFacets().then((facets) => {
       this.colorOptions.set(facets.colors);
       this.seriesOptions.set(facets.series);
+      this.rarityOptions.set(facets.rarities);
     });
   }
 
@@ -70,6 +80,7 @@ export class CardGrid {
       type: this.type() || undefined,
       color: this.color() || undefined,
       series: this.series() || undefined,
+      rarity: this.rarity() || undefined,
       page: this.page(),
       size: PAGE_SIZE,
     });
@@ -104,6 +115,12 @@ export class CardGrid {
     this.refresh.next();
   }
 
+  onRarityChange(value: string): void {
+    this.rarity.set(value);
+    this.page.set(0);
+    this.refresh.next();
+  }
+
   nextPage(): void {
     if (this.page() + 1 >= this.totalPages()) return;
     this.page.update((p) => p + 1);
@@ -120,8 +137,12 @@ export class CardGrid {
     this.printingSelected.emit(printing);
   }
 
-  protected imageUrl(imgLink: string | null): string | null {
-    return cardImageUrl(imgLink);
+  protected imageUrl(printing: CardPrinting): string | null {
+    return awakenedAwareImageUrl(printing);
+  }
+
+  protected displayName(printing: CardPrinting): string {
+    return printingDisplayName(printing);
   }
 
   protected trackByPrinting(_index: number, printing: CardPrinting): string {
@@ -129,21 +150,14 @@ export class CardGrid {
   }
 
   protected colorSwatch(color: string): string {
-    const hex: Record<string, string> = {
-      Red: '#dc2626',
-      Blue: '#2563eb',
-      Green: '#16a34a',
-      Yellow: '#eab308',
-      Black: '#27272a',
-      White: '#f4f4f5',
-      Colorless: '#a1a1aa',
-    };
-    if (color.includes('/')) {
-      const [a, b] = color.split('/');
-      const colorA = hex[a] ?? '#a1a1aa';
-      const colorB = hex[b] ?? '#a1a1aa';
-      return `linear-gradient(135deg, ${colorA} 50%, ${colorB} 50%)`;
-    }
-    return hex[color] ?? '#a1a1aa';
+    return sharedColorSwatch(color);
+  }
+
+  protected rarityCode(rarity: string): string {
+    return sharedRarityCode(rarity);
+  }
+
+  protected rarityLabel(rarity: string): string {
+    return sharedRarityLabel(rarity);
   }
 }

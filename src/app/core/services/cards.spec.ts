@@ -2,7 +2,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { cardImageUrl, CardsService, toLeaderOption } from './cards';
+import {
+  awakenedAwareImageUrl,
+  cardBackImageUrl,
+  cardImageUrl,
+  CardsService,
+  colorSwatch,
+  rarityCode,
+  rarityLabel,
+  toLeaderOption,
+} from './cards';
 
 describe('CardsService', () => {
   let service: CardsService;
@@ -41,15 +50,26 @@ describe('CardsService', () => {
     expect(result).toEqual({ content: [], totalElements: 0, totalPages: 0 });
   });
 
-  it('getFacets calls GET /cards/facets and returns the distinct color/series values', async () => {
+  it('searchPrintings includes the rarity param when provided', async () => {
+    const promise = service.searchPrintings({ rarity: 'Common[C]', page: 0, size: 24 });
+
+    const req = httpMock.expectOne(
+      (r) => r.url === 'http://localhost:8080/cards/printings' && r.params.get('rarity') === 'Common[C]',
+    );
+    req.flush({ content: [], totalElements: 0, totalPages: 0 });
+
+    await promise;
+  });
+
+  it('getFacets calls GET /cards/facets and returns the distinct color/series/rarity values', async () => {
     const promise = service.getFacets();
 
     const req = httpMock.expectOne('http://localhost:8080/cards/facets');
     expect(req.request.method).toBe('GET');
-    req.flush({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'] });
+    req.flush({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'], rarities: ['Common[C]', 'Super Rare[SR]'] });
 
     const result = await promise;
-    expect(result).toEqual({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'] });
+    expect(result).toEqual({ colors: ['Red', 'Blue'], series: ['BT1', 'BT2'], rarities: ['Common[C]', 'Super Rare[SR]'] });
   });
 
   it('getFacets returns an empty fallback when the request fails', async () => {
@@ -59,7 +79,7 @@ describe('CardsService', () => {
     req.error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
 
     const result = await promise;
-    expect(result).toEqual({ colors: [], series: [] });
+    expect(result).toEqual({ colors: [], series: [], rarities: [] });
   });
 });
 
@@ -111,5 +131,82 @@ describe('cardImageUrl', () => {
 
   it('returns null when imgLink is null', () => {
     expect(cardImageUrl(null)).toBeNull();
+  });
+});
+
+describe('cardBackImageUrl', () => {
+  it('builds the DeckPlanet awakened-face asset URL from an imgLink token', () => {
+    expect(cardBackImageUrl('BT18-030')).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030_b.webp',
+    );
+  });
+
+  it('returns null when imgLink is null', () => {
+    expect(cardBackImageUrl(null)).toBeNull();
+  });
+});
+
+describe('awakenedAwareImageUrl', () => {
+  it('prefers the awakened-face image when backName is set and preferAwakened is true (default)', () => {
+    expect(awakenedAwareImageUrl({ backName: 'Awakened', imgLink: 'BT18-030' })).toBe(
+      cardBackImageUrl('BT18-030'),
+    );
+  });
+
+  it('uses the normal-face image when backName is null', () => {
+    expect(awakenedAwareImageUrl({ backName: null, imgLink: 'BT18-030' })).toBe(
+      cardImageUrl('BT18-030'),
+    );
+  });
+
+  it('uses the normal-face image when preferAwakened is explicitly false, even with a backName', () => {
+    expect(awakenedAwareImageUrl({ backName: 'Awakened', imgLink: 'BT18-030' }, false)).toBe(
+      cardImageUrl('BT18-030'),
+    );
+  });
+});
+
+describe('colorSwatch', () => {
+  it('returns the hex value for a known plain color', () => {
+    expect(colorSwatch('Red')).toBe('#dc2626');
+  });
+
+  it('falls back to the default gray for an unknown color', () => {
+    expect(colorSwatch('Purple')).toBe('#a1a1aa');
+  });
+
+  it('returns a diagonal gradient containing both hex values for a dual color', () => {
+    const result = colorSwatch('Red/Blue');
+    expect(result).toContain('linear-gradient');
+    expect(result).toContain('#dc2626');
+    expect(result).toContain('#2563eb');
+  });
+});
+
+describe('rarityCode', () => {
+  it('extracts the bracketed short code from a full rarity string', () => {
+    expect(rarityCode('Super Rare[SR]')).toBe('SR');
+  });
+
+  it('extracts a single-letter code', () => {
+    expect(rarityCode('Common[C]')).toBe('C');
+  });
+
+  it('returns the input unchanged when there is no bracketed code', () => {
+    expect(rarityCode('Unranked')).toBe('Unranked');
+  });
+});
+
+describe('rarityLabel', () => {
+  it('reformats the bracketed code into a parenthesized suffix', () => {
+    expect(rarityLabel('Super Rare[SR]')).toBe('Super Rare (SR)');
+  });
+
+  it('reformats a single-letter code', () => {
+    expect(rarityLabel('Common[C]')).toBe('Common (C)');
+  });
+
+  it('returns the input unchanged when there is no bracketed code', () => {
+    expect(rarityLabel('Unranked')).toBe('Unranked');
   });
 });

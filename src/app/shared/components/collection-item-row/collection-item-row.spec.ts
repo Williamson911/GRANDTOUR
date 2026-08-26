@@ -17,6 +17,19 @@ const GOKU: CardPrinting = {
   imgLink: 'BT18-030',
 };
 
+const TIEN_SHINHAN: CardPrinting = {
+  cardId: 'card-2',
+  variantId: null,
+  name: 'Tien Shinhan',
+  backName: 'Tien Shinhan, Return of the Mysterious Technique',
+  cardType: 'LEADER',
+  color: 'Green',
+  cardNumber: 'BT28-056',
+  series: 'BT28',
+  rarity: 'Uncommon[UC]',
+  imgLink: 'BT28-056',
+};
+
 describe('CollectionItemRow', () => {
   let fixture: ComponentFixture<CollectionItemRow>;
   let component: CollectionItemRow;
@@ -83,5 +96,22 @@ describe('CollectionItemRow', () => {
     const badge = fixture.nativeElement.querySelector('.item-row__lang');
     expect(badge).not.toBeNull();
     expect(badge.textContent.trim()).toBe('FR');
+  });
+
+  it('uses the awakened-face image for a card with a back face', () => {
+    fixture.componentRef.setInput('card', TIEN_SHINHAN);
+    fixture.detectChanges();
+
+    const img = fixture.nativeElement.querySelector('.item-row__thumb') as HTMLImageElement;
+    expect(img.src).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT28-056_b.webp',
+    );
+  });
+
+  it('uses the normal-face image for a card with no back face', () => {
+    const img = fixture.nativeElement.querySelector('.item-row__thumb') as HTMLImageElement;
+    expect(img.src).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT18-030.webp',
+    );
   });
 });

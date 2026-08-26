@@ -21,7 +21,12 @@
       <li>
         <a [routerLink]="['/collection', item.id]" class="collection-tile">
           @if (thumbnailUrl(item); as img) {
-            <img [src]="img" [alt]="item.name" class="collection-tile__thumb" />
+            <img
+              [src]="img"
+              [alt]="item.name"
+              class="collection-tile__thumb"
+              (error)="onThumbnailError($event, item)"
+            />
           }
           <span class="collection-tile__name">{{ item.name }}</span>
           <span class="collection-tile__count">

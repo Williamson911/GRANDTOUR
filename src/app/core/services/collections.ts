@@ -34,6 +34,7 @@ interface CollectionSummaryResponse {
 }
 
 export type CollectionWriteResult = { ok: true } | { ok: false; message: string };
+export type CollectionCreateResult = { ok: true; id: string } | { ok: false; message: string };
 
 export function toCollectionItem(row: CollectionItemResponse): CollectionItem {
   return {
@@ -88,10 +89,12 @@ export class CollectionsService {
     }
   }
 
-  async create(draft: CollectionDraft): Promise<CollectionWriteResult> {
+  async create(draft: CollectionDraft): Promise<CollectionCreateResult> {
     try {
-      await firstValueFrom(this.http.post(`${environment.apiUrl}/collections`, dehydrate(draft)));
-      return { ok: true };
+      const row = await firstValueFrom(
+        this.http.post<CollectionResponse>(`${environment.apiUrl}/collections`, dehydrate(draft)),
+      );
+      return { ok: true, id: row.id };
     } catch (error) {
       return { ok: false, message: this.errorMessage(error) };
     }

@@ -12,7 +12,7 @@ import { from, of, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 import { leaderDisplayName, LeaderOption } from '../../../core/models/card';
-import { cardImageUrl, CardsService } from '../../../core/services/cards';
+import { awakenedAwareImageUrl, CardsService } from '../../../core/services/cards';
 import { I18nService } from '../../../core/services/i18n';
 
 @Component({
@@ -41,10 +41,17 @@ export class LeaderPicker implements ControlValueAccessor {
   readonly selectedOption = signal<LeaderOption | null>(null);
   readonly results = signal<LeaderOption[]>([]);
   protected readonly disabled = signal(false);
+  protected readonly showAwakened = signal(true);
 
   private readonly querySubject = new Subject<string>();
   private onChange: (value: string | null) => void = () => {};
   private onTouched: () => void = () => {};
+  // Tracks the id of the leader last known to be selected — whether that
+  // selection came from the hydration effect below or from select() — so
+  // the hydration effect can tell a genuine change of leader (reset the
+  // toggle) apart from a re-hydration of the SAME leader under a new
+  // `initialCard` object reference (do NOT reset the toggle).
+  private lastHydratedId: string | null = null;
 
   constructor() {
     this.querySubject
@@ -63,6 +70,10 @@ export class LeaderPicker implements ControlValueAccessor {
       const value = this.linkedValue();
       if (this.mode() === 'linked' && card && value === card.id) {
         this.selectedOption.set(card);
+        if (card.id !== this.lastHydratedId) {
+          this.lastHydratedId = card.id;
+          this.showAwakened.set(true);
+        }
       }
     });
   }
@@ -101,6 +112,8 @@ export class LeaderPicker implements ControlValueAccessor {
     if (this.mode() === 'linked') {
       this.linkedValue.set(option.id);
       this.selectedOption.set(option);
+      this.lastHydratedId = option.id;
+      this.showAwakened.set(true);
       this.onChange(option.id);
     } else {
       const name = leaderDisplayName(option);
@@ -118,11 +131,23 @@ export class LeaderPicker implements ControlValueAccessor {
     this.onChange(null);
   }
 
-  protected imageUrl(imgLink: string | null): string | null {
-    return cardImageUrl(imgLink);
+  protected dropdownImageUrl(opt: LeaderOption): string | null {
+    return awakenedAwareImageUrl(opt);
+  }
+
+  toggleFace(): void {
+    this.showAwakened.update((v) => !v);
+  }
+
+  protected chipImageUrl(opt: LeaderOption): string | null {
+    return awakenedAwareImageUrl(opt, this.showAwakened());
   }
 
   protected displayName(option: LeaderOption): string {
+    return leaderDisplayName(option, this.showAwakened());
+  }
+
+  protected dropdownDisplayName(option: LeaderOption): string {
     return leaderDisplayName(option);
   }
 

@@ -14,8 +14,10 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import * as L from 'leaflet';
 
+import { LeaderOption, leaderDisplayName } from '../../core/models/card';
 import { Event } from '../../core/models/event';
 import { BudgetService } from '../../core/services/budget';
+import { awakenedAwareImageUrl } from '../../core/services/cards';
 import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
 import { SeasonService } from '../../core/services/season';
@@ -169,6 +171,14 @@ export class Dashboard implements OnDestroy {
 
   protected formatWinRate(rate: number): string {
     return `${Math.round(rate * 100)}%`;
+  }
+
+  protected leaderImageUrl(leaderCard: LeaderOption): string | null {
+    return awakenedAwareImageUrl(leaderCard);
+  }
+
+  protected leaderName(leaderCard: LeaderOption): string {
+    return leaderDisplayName(leaderCard);
   }
 
   protected openEvent(event: Event): void {

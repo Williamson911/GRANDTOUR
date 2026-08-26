@@ -23,7 +23,7 @@ describe('App', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.brand__name')?.textContent).toContain(
+    expect(compiled.querySelector<HTMLImageElement>('.brand__logo')?.alt).toBe(
       'Grand Tour',
     );
   });

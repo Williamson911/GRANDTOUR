@@ -124,6 +124,7 @@
           <thead>
             <tr>
               <th>{{ i18n.t('dashboard.deck.col.deck') }}</th>
+              <th>{{ i18n.t('dashboard.deck.col.leader') }}</th>
               <th class="bento__num">{{ i18n.t('dashboard.deck.col.n') }}</th>
               <th class="bento__num">{{ i18n.t('dashboard.deck.col.wr') }}</th>
             </tr>
@@ -132,6 +133,12 @@
             @for (row of deckRows(); track row.deckName) {
               <tr>
                 <td>{{ row.deckName }}</td>
+                <td class="bento__leader">
+                  @if (leaderImageUrl(row.leaderCard); as img) {
+                    <img [src]="img" [alt]="leaderName(row.leaderCard)" class="bento__leader-thumb" />
+                  }
+                  <span>{{ leaderName(row.leaderCard) }}</span>
+                </td>
                 <td class="bento__num">{{ row.played }}</td>
                 <td class="bento__num">{{ formatWinRate(row.winRate) }}</td>
               </tr>

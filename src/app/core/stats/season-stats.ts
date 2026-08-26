@@ -1,4 +1,4 @@
-import { leaderDisplayName } from '../models/card';
+import { LeaderOption, leaderDisplayName } from '../models/card';
 import { Event } from '../models/event';
 import { ExpenseCategory, Expense } from '../models/expense';
 import { Match } from '../models/match';
@@ -19,6 +19,7 @@ export interface WinRateStats {
 
 export interface DeckStatsRow {
   deckName: string;
+  leaderCard: LeaderOption;
   played: number;
   record: MatchRecord;
   winRate: number;
@@ -129,17 +130,18 @@ export function globalWinRate(results: PlayerResult[]): WinRateStats {
 }
 
 export function winRateByDeck(results: PlayerResult[]): DeckStatsRow[] {
-  const byDeck = new Map<string, Match[]>();
+  const byDeck = new Map<string, { leaderCard: LeaderOption; matches: Match[] }>();
   for (const r of results) {
-    const arr = byDeck.get(r.deckName) ?? [];
-    arr.push(...r.matches);
-    byDeck.set(r.deckName, arr);
+    const entry = byDeck.get(r.deckName) ?? { leaderCard: r.leaderCard, matches: [] };
+    entry.matches.push(...r.matches);
+    byDeck.set(r.deckName, entry);
   }
   const rows: DeckStatsRow[] = [];
-  for (const [deckName, matches] of byDeck) {
+  for (const [deckName, { leaderCard, matches }] of byDeck) {
     const record = aggregateRecord(matches);
     rows.push({
       deckName,
+      leaderCard,
       played: recordPlayed(record),
       record,
       winRate: computeWinRate(record),
@@ -303,6 +305,21 @@ export function budgetTotals(
   const spent = expenses.reduce((s, e) => s + e.amount, 0);
   const prizes = results.reduce((s, r) => s + r.prizes, 0);
   return { spent, prizes, net: prizes - spent };
+}
+
+export function findDeckNameConflict(
+  results: PlayerResult[],
+  eventId: string,
+  deckName: string,
+  leaderCardId: string,
+): LeaderOption | null {
+  const conflict = results.find(
+    (r) =>
+      r.eventId !== eventId &&
+      r.deckName === deckName &&
+      r.leaderCard.id !== leaderCardId,
+  );
+  return conflict ? conflict.leaderCard : null;
 }
 
 export function computeAvailableYears(

@@ -18,10 +18,12 @@ import { Router, RouterLink } from '@angular/router';
 
 import { ExpenseCategory } from '../../core/models/expense';
 import { Match, MatchResult } from '../../core/models/match';
+import { leaderDisplayName } from '../../core/models/card';
 import { BudgetService } from '../../core/services/budget';
 import { EventService } from '../../core/services/event';
 import { I18nService } from '../../core/services/i18n';
 import { SeasonService } from '../../core/services/season';
+import { findDeckNameConflict } from '../../core/stats/season-stats';
 import { LeaderPicker } from '../../shared/components/leader-picker/leader-picker';
 
 const CATEGORIES: ExpenseCategory[] = [
@@ -97,6 +99,7 @@ export class EventDetail {
   });
 
   protected readonly resultSaved = signal(false);
+  protected readonly deckConflictError = signal<string | null>(null);
   protected readonly editingMatchRound = signal<number | null>(null);
 
   protected readonly resultForm: FormGroup = this.fb.group({
@@ -158,11 +161,28 @@ export class EventDetail {
       return;
     }
     const v = this.resultForm.value;
+    const deckName = String(v.deckName).trim();
+    const leaderCardId = String(v.leaderCardId);
+    const conflict = findDeckNameConflict(
+      this.season.allResults(),
+      this.eventId(),
+      deckName,
+      leaderCardId,
+    );
+    if (conflict) {
+      this.deckConflictError.set(
+        this.i18n.t('detail.result.errors.deckLeaderConflict', {
+          leader: leaderDisplayName(conflict),
+        }),
+      );
+      return;
+    }
+    this.deckConflictError.set(null);
     this.season.upsertResult(this.eventId(), {
       placement: Number(v.placement),
       totalPlayers: Number(v.totalPlayers),
-      deckName: String(v.deckName).trim(),
-      leaderCardId: String(v.leaderCardId),
+      deckName,
+      leaderCardId,
       prizes: Number(v.prizes) || 0,
       notes: v.notes ? String(v.notes) : undefined,
     });
@@ -173,6 +193,7 @@ export class EventDetail {
   protected deleteResult(): void {
     if (!confirm(this.i18n.t('detail.result.deleteConfirm'))) return;
     this.season.deleteResult(this.eventId());
+    this.deckConflictError.set(null);
     this.resultForm.reset({
       placement: 1,
       totalPlayers: 0,

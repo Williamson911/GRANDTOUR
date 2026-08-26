@@ -17,6 +17,18 @@ const GOKU: CardPrinting = {
   imgLink: 'BT18-030',
 };
 const VEGETA: CardPrinting = { ...GOKU, cardId: 'card-2', name: 'Vegeta', cardNumber: 'BT18-031' };
+const TIEN_SHINHAN: CardPrinting = {
+  cardId: 'card-3',
+  variantId: null,
+  name: 'Tien Shinhan',
+  backName: 'Tien Shinhan, Return of the Mysterious Technique',
+  cardType: 'LEADER',
+  color: 'Green',
+  cardNumber: 'BT28-056',
+  series: 'BT28',
+  rarity: 'Uncommon[UC]',
+  imgLink: 'BT28-056',
+};
 
 describe('CardDetailPanel', () => {
   let fixture: ComponentFixture<CardDetailPanel>;
@@ -129,5 +141,105 @@ describe('CardDetailPanel', () => {
     component.add();
 
     expect(spy).toHaveBeenCalledWith({ quantity: 1, price: 0, language: 'EN' });
+  });
+
+  it('emits closed() when the backdrop is clicked', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    const backdrop = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.detail-panel__backdrop',
+    )!;
+    backdrop.click();
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('does not emit closed() when the panel itself is clicked', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    const panel = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.detail-panel')!;
+    panel.click();
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('emits closed() when Escape is pressed', async () => {
+    await setup(null, null, null);
+    const spy = vi.fn();
+    component.closed.subscribe(spy);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('defaults to the awakened-face image for a card with a back face', async () => {
+    await setup(null, null, null);
+    fixture.componentRef.setInput('printing', TIEN_SHINHAN);
+    fixture.detectChanges();
+
+    const img = fixture.nativeElement.querySelector('.detail-panel__thumb') as HTMLImageElement;
+    expect(img.src).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT28-056_b.webp',
+    );
+  });
+
+  it('shows the awakened display name by default and the normal name when toggled', async () => {
+    await setup(null, null, null);
+    fixture.componentRef.setInput('printing', TIEN_SHINHAN);
+    fixture.detectChanges();
+
+    const name = fixture.nativeElement.querySelector('.detail-panel__name') as HTMLElement;
+    expect(name.textContent?.trim()).toBe('Tien Shinhan, Return of the Mysterious Technique');
+
+    const toggle = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.detail-panel__toggle-face',
+    )!;
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(name.textContent?.trim()).toBe('Tien Shinhan');
+  });
+
+  it('does not render a toggle button for a card with no back face', async () => {
+    await setup(null, null, null);
+    fixture.detectChanges();
+
+    const toggle = fixture.nativeElement.querySelector('.detail-panel__toggle-face');
+    expect(toggle).toBeNull();
+  });
+
+  it('toggles the image and resets when a different card is selected', async () => {
+    await setup(null, null, null);
+    fixture.componentRef.setInput('printing', TIEN_SHINHAN);
+    fixture.detectChanges();
+
+    const toggle = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.detail-panel__toggle-face',
+    )!;
+    toggle.click();
+    fixture.detectChanges();
+
+    let img = fixture.nativeElement.querySelector('.detail-panel__thumb') as HTMLImageElement;
+    expect(img.src).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT28-056.webp',
+    );
+
+    fixture.componentRef.setInput('printing', VEGETA);
+    fixture.componentRef.setInput('initialQuantity', null);
+    fixture.componentRef.setInput('initialPrice', null);
+    fixture.componentRef.setInput('initialLanguage', null);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('printing', TIEN_SHINHAN);
+    fixture.detectChanges();
+
+    img = fixture.nativeElement.querySelector('.detail-panel__thumb') as HTMLImageElement;
+    expect(img.src).toBe(
+      'https://multi-deckplanet.us-southeast-1.linodeobjects.com/dbs_masters/BT28-056_b.webp',
+    );
   });
 });

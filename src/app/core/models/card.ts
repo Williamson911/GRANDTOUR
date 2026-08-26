@@ -8,6 +8,7 @@ export interface LeaderOption {
   cardRarity: string | null;
 }
 
-export function leaderDisplayName(option: LeaderOption): string {
-  return option.backName ? `${option.name} / ${option.backName}` : option.name;
+export function leaderDisplayName(option: LeaderOption, preferAwakened = true): string {
+  if (!option.backName) return option.name;
+  return preferAwakened ? option.backName : option.name;
 }

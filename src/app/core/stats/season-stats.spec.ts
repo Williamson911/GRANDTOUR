@@ -14,6 +14,7 @@ import {
   computeWinRate,
   filterExpensesByYear,
   filterResultsByYear,
+  findDeckNameConflict,
   globalWinRate,
   leadersPlayed,
   matchupBreakdown,
@@ -222,6 +223,17 @@ describe('winRateByDeck', () => {
   it('returns [] on empty input', () => {
     expect(winRateByDeck([])).toEqual([]);
   });
+
+  it('includes the leader card from the first result seen for that deck name, not the last', () => {
+    const firstLeader = makeLeader({ id: 'l1', name: 'Goku Black' });
+    const laterLeader = makeLeader({ id: 'l2', name: 'Vegeta Blue' });
+    const results = [
+      makeResult({ eventId: 'a', deckName: 'Goku Black', leaderCard: firstLeader }),
+      makeResult({ eventId: 'b', deckName: 'Goku Black', leaderCard: laterLeader }),
+    ];
+    const rows = winRateByDeck(results);
+    expect(rows[0].leaderCard).toEqual(firstLeader);
+  });
 });
 
 describe('matchupBreakdown', () => {
@@ -283,7 +295,7 @@ describe('leadersPlayed', () => {
     ]);
   });
 
-  it('uses the combined front / back display name when the leader has an awakened face', () => {
+  it('uses the awakened display name when the leader has an awakened face', () => {
     const results = [
       makeResult({
         eventId: 'a',
@@ -291,7 +303,7 @@ describe('leadersPlayed', () => {
       }),
     ];
     expect(leadersPlayed(results)).toEqual([
-      { id: 'l-aeos', name: 'AEOS / AEOS, POUVOIR DES PREDECESSEURS' },
+      { id: 'l-aeos', name: 'AEOS, POUVOIR DES PREDECESSEURS' },
     ]);
   });
 });
@@ -470,5 +482,33 @@ describe('computeAvailableYears', () => {
     for (let i = 1; i < out.length; i++) {
       expect(out[i - 1]).toBeGreaterThan(out[i]);
     }
+  });
+});
+
+describe('findDeckNameConflict', () => {
+  it('returns null when the deck name has never been used before', () => {
+    const results = [
+      makeResult({ eventId: 'a', deckName: 'Goku Black', leaderCard: makeLeader({ id: 'l1', name: 'Goku Black' }) }),
+    ];
+    expect(findDeckNameConflict(results, 'b', 'Some Other Deck', 'l2')).toBeNull();
+  });
+
+  it('returns null when the deck name was used before with the SAME leader', () => {
+    const leader = makeLeader({ id: 'l1', name: 'Goku Black' });
+    const results = [makeResult({ eventId: 'a', deckName: 'Goku Black', leaderCard: leader })];
+    expect(findDeckNameConflict(results, 'b', 'Goku Black', 'l1')).toBeNull();
+  });
+
+  it('returns the conflicting leader when the deck name was used before with a DIFFERENT leader', () => {
+    const other = makeLeader({ id: 'l1', name: 'Goku Black' });
+    const results = [makeResult({ eventId: 'a', deckName: 'Goku Black', leaderCard: other })];
+    expect(findDeckNameConflict(results, 'b', 'Goku Black', 'l2')).toEqual(other);
+  });
+
+  it('ignores the current event when editing an existing result (no self-conflict)', () => {
+    const results = [
+      makeResult({ eventId: 'a', deckName: 'Goku Black', leaderCard: makeLeader({ id: 'l1', name: 'Goku Black' }) }),
+    ];
+    expect(findDeckNameConflict(results, 'a', 'Goku Black', 'l2')).toBeNull();
   });
 });

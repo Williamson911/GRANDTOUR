@@ -1,5 +1,5 @@
 <section class="editor">
-  <a class="editor__back" routerLink="/collection">{{ i18n.t('collection.editor.back') }}</a>
+  <a class="editor__back" [routerLink]="backLink()">{{ i18n.t('collection.editor.back') }}</a>
 
   <input
     type="text"

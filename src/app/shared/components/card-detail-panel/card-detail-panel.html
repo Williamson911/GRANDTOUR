@@ -1,37 +1,52 @@
-<div class="detail-panel">
-  <button type="button" class="detail-panel__close" (click)="close()">×</button>
+<div class="detail-panel__backdrop" (click)="close()">
+  <div class="detail-panel" (click)="$event.stopPropagation()">
+    <button type="button" class="detail-panel__close" (click)="close()">×</button>
 
-  @if (imgUrl(); as img) {
-    <img [src]="img" [alt]="displayName()" class="detail-panel__thumb" />
-  }
-  <h3 class="detail-panel__name">{{ displayName() }}</h3>
-  <p class="detail-panel__meta">{{ printing().cardNumber }} · {{ printing().rarity }}</p>
+    @if (imgUrl(); as img) {
+      <img [src]="img" [alt]="displayName()" class="detail-panel__thumb" />
+    }
+    @if (printing().backName) {
+      <button
+        type="button"
+        class="detail-panel__toggle-face"
+        (click)="toggleFace()"
+      >
+        {{
+          showAwakened()
+            ? i18n.t('cardDetail.viewNormalFace')
+            : i18n.t('cardDetail.viewAwakenedFace')
+        }}
+      </button>
+    }
+    <h3 class="detail-panel__name">{{ displayName() }}</h3>
+    <p class="detail-panel__meta">{{ printing().cardNumber }} · {{ printing().rarity }}</p>
 
-  <form [formGroup]="form" (ngSubmit)="add()">
-    <label>
-      <span>{{ i18n.t('cardDetail.quantity') }}</span>
-      <input type="number" formControlName="quantity" min="1" />
-    </label>
-    <label>
-      <span>{{ i18n.t('cardDetail.price') }}</span>
-      <input type="number" formControlName="price" min="0" step="0.01" />
-    </label>
-    <label>
-      <span>{{ i18n.t('cardDetail.language') }}</span>
-      <select formControlName="language">
-        <option value="">{{ i18n.t('cardDetail.languageUnset') }}</option>
-        <option value="FR">{{ i18n.t('cardDetail.languageFr') }}</option>
-        <option value="EN">{{ i18n.t('cardDetail.languageEn') }}</option>
-      </select>
-    </label>
+    <form [formGroup]="form" (ngSubmit)="add()">
+      <label>
+        <span>{{ i18n.t('cardDetail.quantity') }}</span>
+        <input type="number" formControlName="quantity" min="1" />
+      </label>
+      <label>
+        <span>{{ i18n.t('cardDetail.price') }}</span>
+        <input type="number" formControlName="price" min="0" step="0.01" />
+      </label>
+      <label>
+        <span>{{ i18n.t('cardDetail.language') }}</span>
+        <select formControlName="language">
+          <option value="">{{ i18n.t('cardDetail.languageUnset') }}</option>
+          <option value="FR">{{ i18n.t('cardDetail.languageFr') }}</option>
+          <option value="EN">{{ i18n.t('cardDetail.languageEn') }}</option>
+        </select>
+      </label>
 
-    <div class="detail-panel__actions">
-      <button type="submit" class="btn btn--accent">{{ i18n.t('cardDetail.add') }}</button>
-      @if (isExisting()) {
-        <button type="button" class="btn btn--ghost-danger" (click)="remove()">
-          {{ i18n.t('cardDetail.remove') }}
-        </button>
-      }
-    </div>
-  </form>
+      <div class="detail-panel__actions">
+        <button type="submit" class="btn btn--accent">{{ i18n.t('cardDetail.add') }}</button>
+        @if (isExisting()) {
+          <button type="button" class="btn btn--ghost-danger" (click)="remove()">
+            {{ i18n.t('cardDetail.remove') }}
+          </button>
+        }
+      </div>
+    </form>
+  </div>
 </div>

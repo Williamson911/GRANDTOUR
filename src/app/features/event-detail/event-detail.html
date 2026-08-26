@@ -102,6 +102,9 @@
           </label>
         </div>
 
+        @if (deckConflictError(); as err) {
+          <p class="form__error" role="alert">{{ err }}</p>
+        }
         @if (resultSaved()) {
           <p class="form__success" role="status">{{ i18n.t('detail.result.saved') }}</p>
         }

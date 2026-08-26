@@ -38,6 +38,7 @@ export function printingKey(card: CardPrinting): string {
   return `${card.cardId}:${card.variantId ?? 'base'}`;
 }
 
-export function printingDisplayName(card: CardPrinting): string {
-  return card.backName ? `${card.name} / ${card.backName}` : card.name;
+export function printingDisplayName(card: CardPrinting, preferAwakened = true): string {
+  if (!card.backName) return card.name;
+  return preferAwakened ? card.backName : card.name;
 }

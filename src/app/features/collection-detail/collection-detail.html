@@ -1,0 +1,74 @@
+<section class="detail">
+  <a class="detail__back" routerLink="/collection">{{ i18n.t('collection.editor.back') }}</a>
+
+  @if (loading()) {
+    <p class="detail__status">{{ i18n.t('collection.detail.loading') }}</p>
+  } @else if (notFound()) {
+    <p class="detail__status">{{ i18n.t('collection.detail.notFound') }}</p>
+  } @else if (draft(); as d) {
+    <div class="detail__header">
+      <h1 class="detail__name">{{ d.name }}</h1>
+      <div class="detail__actions">
+        <a class="btn btn--accent" [routerLink]="['/collection', collectionId(), 'edit']">
+          {{ i18n.t('collection.detail.edit') }}
+        </a>
+        <button
+          type="button"
+          class="detail__delete btn btn--ghost-danger"
+          [disabled]="deleting()"
+          (click)="deleteCollection()"
+        >
+          {{ i18n.t('collection.detail.delete') }}
+        </button>
+      </div>
+    </div>
+
+    @if (items().length > 0) {
+      <p class="detail__summary">
+        {{ i18n.t('collection.detail.summary', { count: cardCount(), total: totalPrice() }) }}
+      </p>
+    }
+
+    @if (items().length === 0) {
+      <p class="detail__empty">{{ i18n.t('collection.detail.empty') }}</p>
+    } @else {
+      <ul class="detail__list">
+        @for (item of items(); track trackByPrinting($index, item)) {
+          <li class="detail__item">
+            @if (imageUrl(item.card); as img) {
+              <img [src]="img" [alt]="displayName(item.card)" class="detail__thumb" />
+            }
+            <span class="detail__card-name">{{ displayName(item.card) }}</span>
+            <span class="detail__card-meta">{{ item.card.cardNumber }}</span>
+            <span class="detail__badges">
+              @if (item.card.color; as color) {
+                <span
+                  class="detail__color-swatch"
+                  [style.background]="colorSwatch(color)"
+                  [attr.aria-label]="color"
+                ></span>
+              }
+              @if (item.card.rarity; as rarity) {
+                <span class="detail__rarity">{{ rarityCode(rarity) }}</span>
+              }
+              @if (item.language) {
+                <span
+                  class="detail__lang"
+                  [class.detail__lang--fr]="item.language === 'FR'"
+                  [class.detail__lang--en]="item.language === 'EN'"
+                >
+                  {{ item.language }}
+                </span>
+              }
+            </span>
+            <span class="detail__stats">
+              <span class="detail__qty">× {{ item.quantity }}</span>
+              <span class="detail__price">{{ item.price | number: '1.2-2' }} €</span>
+              <span class="detail__total">{{ item.quantity * item.price | number: '1.2-2' }} €</span>
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

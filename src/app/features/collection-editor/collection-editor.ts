@@ -58,6 +58,10 @@ export class CollectionEditor {
     if (!printing) return undefined;
     return this.items().find((item) => printingKey(item.card) === printingKey(printing));
   });
+  protected readonly backLink = computed(() => {
+    const id = this.collectionId();
+    return id ? ['/collection', id] : ['/collection'];
+  });
 
   constructor() {
     // Signal inputs set via `setInput()` (as tests do) are only applied
@@ -151,16 +155,26 @@ export class CollectionEditor {
     this.saving.set(true);
     this.saveError.set('');
     const draft = this.draft();
-    const result = draft.id
-      ? await this.collections.update(draft.id, draft)
-      : await this.collections.create(draft);
-    this.saving.set(false);
-    if (!result.ok) {
-      this.saveError.set(this.i18n.t('collection.errors.saveFailed'));
-      return;
+    let savedId: string;
+    if (draft.id) {
+      const result = await this.collections.update(draft.id, draft);
+      this.saving.set(false);
+      if (!result.ok) {
+        this.saveError.set(this.i18n.t('collection.errors.saveFailed'));
+        return;
+      }
+      savedId = draft.id;
+    } else {
+      const result = await this.collections.create(draft);
+      this.saving.set(false);
+      if (!result.ok) {
+        this.saveError.set(this.i18n.t('collection.errors.saveFailed'));
+        return;
+      }
+      savedId = result.id;
     }
     // Swallow navigation failures (e.g. the target route not being
     // registered yet) rather than leaving an unhandled rejection.
-    void this.router.navigate(['/collection']).catch(() => {});
+    void this.router.navigate(['/collection', savedId]).catch(() => {});
   }
 }

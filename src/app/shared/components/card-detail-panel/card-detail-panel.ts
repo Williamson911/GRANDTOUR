@@ -1,8 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  HostListener,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CardLanguage, CardPrinting, printingDisplayName, printingKey } from '../../../core/models/collection';
-import { cardImageUrl } from '../../../core/services/cards';
+import { awakenedAwareImageUrl } from '../../../core/services/cards';
 import { I18nService } from '../../../core/services/i18n';
 
 @Component({
@@ -25,8 +35,12 @@ export class CardDetailPanel {
   readonly removed = output<void>();
   readonly closed = output<void>();
 
-  protected readonly displayName = computed(() => printingDisplayName(this.printing()));
-  protected readonly imgUrl = computed(() => cardImageUrl(this.printing().imgLink));
+  protected readonly showAwakened = signal(true);
+
+  protected readonly displayName = computed(() =>
+    printingDisplayName(this.printing(), this.showAwakened()),
+  );
+  protected readonly imgUrl = computed(() => awakenedAwareImageUrl(this.printing(), this.showAwakened()));
   protected readonly isExisting = computed(() => this.initialQuantity() !== null);
 
   readonly form: FormGroup = this.fb.group({
@@ -50,6 +64,7 @@ export class CardDetailPanel {
       // resets the form instead of leaving stale values behind.
       if (key !== lastKey) {
         lastKey = key;
+        this.showAwakened.set(true);
         this.form.patchValue(
           { quantity: qty ?? 1, price: price ?? 0, language: language ?? '' },
           { emitEvent: false },
@@ -74,7 +89,16 @@ export class CardDetailPanel {
     this.removed.emit();
   }
 
+  toggleFace(): void {
+    this.showAwakened.update((v) => !v);
+  }
+
   protected close(): void {
     this.closed.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.close();
   }
 }

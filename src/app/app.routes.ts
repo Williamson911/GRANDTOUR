@@ -97,8 +97,15 @@ export const routes: Routes = [
     path: 'collection/:collectionId',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/collection-editor/collection-editor').then((m) => m.CollectionEditor),
+      import('./features/collection-detail/collection-detail').then((m) => m.CollectionDetail),
     title: 'Collection — Grand Tour',
+  },
+  {
+    path: 'collection/:collectionId/edit',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/collection-editor/collection-editor').then((m) => m.CollectionEditor),
+    title: 'Modifier la collection — Grand Tour',
   },
   {
     path: 'event/:eventId',

@@ -30,6 +30,12 @@
         <option [value]="s">{{ s }}</option>
       }
     </select>
+    <select (change)="onRarityChange($any($event.target).value)">
+      <option value="">{{ i18n.t('cardGrid.allRarities') }}</option>
+      @for (r of rarityOptions(); track r) {
+        <option [value]="r">{{ rarityLabel(r) }}</option>
+      }
+    </select>
   </div>
 
   @if (results().length === 0) {
@@ -38,11 +44,23 @@
     <ul class="card-grid__list">
       @for (printing of results(); track trackByPrinting($index, printing)) {
         <li class="card-grid__item" (click)="select(printing)">
-          @if (imageUrl(printing.imgLink); as img) {
-            <img [src]="img" [alt]="printing.name" class="card-grid__thumb" />
+          @if (imageUrl(printing); as img) {
+            <img [src]="img" [alt]="displayName(printing)" class="card-grid__thumb" />
           }
-          <span class="card-grid__name">{{ printing.name }}</span>
+          <span class="card-grid__name">{{ displayName(printing) }}</span>
           <span class="card-grid__number">{{ printing.cardNumber }}</span>
+          <span class="card-grid__meta">
+            @if (printing.color; as color) {
+              <span
+                class="card-grid__color-swatch card-grid__color-swatch--sm"
+                [style.background]="colorSwatch(color)"
+                [attr.aria-label]="color"
+              ></span>
+            }
+            @if (printing.rarity; as rarity) {
+              <span class="card-grid__rarity">{{ rarityCode(rarity) }}</span>
+            }
+          </span>
         </li>
       }
     </ul>

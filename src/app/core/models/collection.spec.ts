@@ -24,13 +24,20 @@ describe('printingKey', () => {
 });
 
 describe('printingDisplayName', () => {
-  it('joins front and back names with " / " when there is an awakened back face', () => {
+  it('returns the awakened (back) name by default when there is an awakened back face', () => {
     expect(printingDisplayName({ ...BASE_PRINTING, backName: 'God Son Goku' })).toBe(
-      'Son Goku / God Son Goku',
+      'God Son Goku',
     );
   });
 
-  it('returns just the front name when there is no back face', () => {
+  it('returns the front name when preferAwakened is explicitly false, even with a back face', () => {
+    expect(printingDisplayName({ ...BASE_PRINTING, backName: 'God Son Goku' }, false)).toBe(
+      'Son Goku',
+    );
+  });
+
+  it('returns just the front name when there is no back face, regardless of preferAwakened', () => {
     expect(printingDisplayName(BASE_PRINTING)).toBe('Son Goku');
+    expect(printingDisplayName(BASE_PRINTING, false)).toBe('Son Goku');
   });
 });

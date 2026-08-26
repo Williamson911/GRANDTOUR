@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { CardLanguage, CardPrinting, printingDisplayName } from '../../../core/models/collection';
-import { cardImageUrl } from '../../../core/services/cards';
+import { awakenedAwareImageUrl } from '../../../core/services/cards';
 
 @Component({
   selector: 'app-collection-item-row',
@@ -22,7 +22,7 @@ export class CollectionItemRow {
   readonly removed = output<void>();
 
   protected readonly displayName = computed(() => printingDisplayName(this.card()));
-  protected readonly imgUrl = computed(() => cardImageUrl(this.card().imgLink));
+  protected readonly imgUrl = computed(() => awakenedAwareImageUrl(this.card()));
   readonly lineTotal = computed(() => this.quantity() * this.price());
 
   increment(): void {

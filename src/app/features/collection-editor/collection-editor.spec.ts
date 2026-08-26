@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 
 import { CardPrinting, CollectionDraft } from '../../core/models/collection';
@@ -26,6 +26,7 @@ describe('CollectionEditor', () => {
   let getById: ReturnType<typeof vi.fn>;
   let create: ReturnType<typeof vi.fn>;
   let update: ReturnType<typeof vi.fn>;
+  let router: Router;
 
   async function setup(collectionId?: string): Promise<void> {
     getById = vi.fn().mockResolvedValue({
@@ -33,7 +34,7 @@ describe('CollectionEditor', () => {
       name: 'Existing',
       items: [{ quantity: 2, price: 10, language: null, card: GOKU }],
     } satisfies CollectionDraft);
-    create = vi.fn().mockResolvedValue({ ok: true });
+    create = vi.fn().mockResolvedValue({ ok: true, id: 'new-col-id' });
     update = vi.fn().mockResolvedValue({ ok: true });
 
     await TestBed.configureTestingModule({
@@ -43,6 +44,9 @@ describe('CollectionEditor', () => {
         { provide: CollectionsService, useValue: { getById, create, update } },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     fixture = TestBed.createComponent(CollectionEditor);
     component = fixture.componentInstance;
@@ -123,6 +127,7 @@ describe('CollectionEditor', () => {
 
     expect(create).toHaveBeenCalledWith(component.draft());
     expect(update).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/collection', 'new-col-id']);
   });
 
   it('save() calls update() when the draft has an id', async () => {
@@ -132,6 +137,7 @@ describe('CollectionEditor', () => {
 
     expect(update).toHaveBeenCalledWith('col-1', component.draft());
     expect(create).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/collection', 'col-1']);
   });
 
   it('save() sets an error and does not call create() when the name is blank', async () => {
@@ -141,5 +147,17 @@ describe('CollectionEditor', () => {
 
     expect(create).not.toHaveBeenCalled();
     expect(component.saveError()).not.toBe('');
+  });
+
+  it('backLink() points to the list when there is no collectionId', async () => {
+    await setup();
+
+    expect(component['backLink']()).toEqual(['/collection']);
+  });
+
+  it('backLink() points to the collection detail view when a collectionId is set', async () => {
+    await setup('col-1');
+
+    expect(component['backLink']()).toEqual(['/collection', 'col-1']);
   });
 });
